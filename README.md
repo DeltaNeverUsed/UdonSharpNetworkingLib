@@ -6,9 +6,9 @@ TODO: Write readme
 
 ## Temp Example
 ```csharp
+// you need to specify what parameter types you are going to use you do this by adding a define like so #define USPPNet_[TYPE] replacing [TYPE] with I.E string, float, or etc
 #define USPPNet_int
 #define USPPNet_string
-// you need to specify what parameter types you are going to use you do this by adding a define like so #define USPPNet_[TYPE] replacing [TYPE] with I.E string, float, or etc
 
 // You must have these two
 using USPPNet;
@@ -20,10 +20,7 @@ using VRC.SDKBase;
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class Cube : UdonSharpBehaviour
-{
-    // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
-    // USPPNet Init
-
+{   
     private void USPPNET_Test(string msg, int test) // Demo method
     {
         Debug.Log($"Triggered! {msg}, num: {test}");
@@ -38,14 +35,25 @@ public class Cube : UdonSharpBehaviour
         RequestSerialization(); // if you're using manual (i recommend you do) you need to call RequestSerialization to send the RPC
     }
 
+    // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
+    public override void OnDeserialization()
+    {
+        // Always put your own code above the USPPNet comments, otherwise debugging will get hard
+        // USPPNet OnDeserialization
+    }
+    
     public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
     {
+        // You'd also want OnDeserialization to be before OnPostSerialization, for the same reason
         // USPPNet OnPostSerialization
     }
 
-    public override void OnDeserialization()
-    {
-        // USPPNet OnDeserialization
-    }
+    // USPPNet Init
 }
 ```
+
+# Known Issues
+1. Arrays are not supported
+2. Serialization will fail if you try to pass a null argument into function
+3. Not all value types are supported
+4. Network usage is relatively high ~170 Bytes(increases with more "USPPNet_[TYPE]" defines) for one call, it's not linear so two calls at once would take ~190 bytes. Theses are the results from the demo
