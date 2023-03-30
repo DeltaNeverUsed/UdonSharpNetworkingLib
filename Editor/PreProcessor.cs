@@ -282,7 +282,7 @@ namespace USPPNet
 
                 var functionName = l.Substring(start+5, argsStart-(start+6));
                 
-                Debug.Log($"Function: {functionName}, arg types: {ObjectDumper.Dump(functionArgs)}");
+                //Debug.Log($"Function: {functionName}, arg types: {ObjectDumper.Dump(functionArgs)}");
                 
                 functions.Add(functionName, functionArgs);
                 
@@ -319,8 +319,8 @@ namespace USPPNet
 
                 lines[index] = l.Replace(function, $"USPPNet_RPC(\"{functionName}\", ");
 
-                Debug.Log($"Line: {lineNum}, Line: {lines[index]}");
-                break; // remember to remove
+                //Debug.Log($"Line: {lineNum}, Line: {lines[index]}");
+                //break; // remember to remove
             }
 
             return lines;
@@ -357,7 +357,7 @@ namespace USPPNet
         private static string[] replace_Placeholder_Comments(this string[] lines, ref Dictionary<string, string[]> functions)
         {
             var methcall = create_OnDeserialization_MethodCall(ref functions);
-            Debug.Log("Goobed:"+methcall);
+            //Debug.Log("Goobed:"+methcall);
             
             for (var i = 0; i < lines.Length; i++)
             {
@@ -380,7 +380,7 @@ namespace USPPNet
             lines = lines.replace_USPPNet_Calls(ref inst.functions).replace_Placeholder_Comments(ref inst.functions);
 
             prog = lines.Aggregate("", (current, line) => current + line + "\n");
-            Debug.Log(prog);
+            //Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
         }
