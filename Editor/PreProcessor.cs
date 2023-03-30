@@ -363,7 +363,7 @@ namespace USPPNet
             {
                 lines[i] = lines[i].Replace("// USPPNet Init",  PreProcessorSnippits.USPPNetInit);
                 lines[i] = lines[i].Replace("// USPPNet OnPostSerialization",  PreProcessorSnippits.USPPNetOnPostSerialization);
-                lines[i] = lines[i].Replace("// USPPNet OnDeserialization",  PreProcessorSnippits.USPPNetOnDeserialization);
+                lines[i] = lines[i].Replace("// USPPNet OnDeserialization",  RemoveNewLines(PreProcessorSnippits.USPPNetOnDeserialization));
                 lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE ME!!!",  methcall);
             }
             

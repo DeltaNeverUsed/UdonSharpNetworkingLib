@@ -1,6 +1,6 @@
-﻿#define USPPNet_int
+﻿// you need to specify what parameter types you are going to use you do this by adding a define like so #define USPPNet_[TYPE] replacing [TYPE] with I.E string, float, or etc
+#define USPPNet_int
 #define USPPNet_string
-// you need to specify what parameter types you are going to use you do this by adding a define like so #define USPPNet_[TYPE] replacing [TYPE] with I.E string, float, or etc
 
 // You must have these two
 using USPPNet;
@@ -12,10 +12,7 @@ using VRC.SDKBase;
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class Cube : UdonSharpBehaviour
-{
-    // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
-    // USPPNet Init
-
+{   
     private void USPPNET_Test(string msg, int test) // Demo method
     {
         Debug.Log($"Triggered! {msg}, num: {test}");
@@ -30,13 +27,18 @@ public class Cube : UdonSharpBehaviour
         RequestSerialization(); // if you're using manual (i recommend you do) you need to call RequestSerialization to send the RPC
     }
 
+    // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
+    public override void OnDeserialization()
+    {
+        // Always put your own code above the USPPNet comments, otherwise debugging will get hard
+        // USPPNet OnDeserialization
+    }
+    
     public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
     {
+        // You'd also want OnDeserialization to be before OnPostSerialization, for the same reason
         // USPPNet OnPostSerialization
     }
 
-    public override void OnDeserialization()
-    {
-        // USPPNet OnDeserialization
-    }
+    // USPPNet Init
 }
