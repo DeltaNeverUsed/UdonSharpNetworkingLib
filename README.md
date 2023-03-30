@@ -19,9 +19,10 @@ It's recommened to have the functions and comments in this order to prevent pain
 using USPPNet;
 using System;
 
-// Before class ↑
+/// Before class ↑
 
-// Inside class ↓
+/// Inside class ↓
+
 // Comments that start with USPPNet are important, you need them for USPPNet to work
 
 public override void OnDeserialization()
