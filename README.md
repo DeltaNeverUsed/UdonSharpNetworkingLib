@@ -54,6 +54,9 @@ void USPPNET_Ping() {
 USPPNET_Ping(); // The PreProcessor will parse this and turn it into a USPPNet remote function call
 // So "USPPNET_Ping();" will become USPPNet_RPC("USPPNET_Ping");
 // But that isn't really something you have to think about since it all happens in the background
+
+// If you're using manual sync mode (which i recommend) you'll need to call RequestSerialization before the function call happens
+// You can also batch up multiple different and multiple of the same calls into one RequestSerialization to save bandwidth
 ```
 ### Calling functions with parameters!
 ```csharp
