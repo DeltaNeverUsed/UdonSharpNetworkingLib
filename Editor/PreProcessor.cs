@@ -22,7 +22,6 @@ namespace USPPNet
     private int USPPNet_updateIndexLast = -1;
     [UdonSynced] private int USPPNet_updateIndex = -1;
     [UdonSynced] private string[] USPPNet_methods = Array.Empty<string>();
-    [UdonSynced] private int[] USPPNet_args = Array.Empty<int>();
 
 #if USPPNet_byte
     [UdonSynced] private byte[] USPPNet_args_byte = Array.Empty<byte>();
@@ -93,64 +92,79 @@ namespace USPPNet
     private string[] USPPNet_methods_empty = Array.Empty<string>();
     private int[] USPPNet_args_empty = Array.Empty<int>();
 
-    private void USPPNet_RPC(string method, params object[] args)
+        private void USPPNet_RPC(string method, params object[] args)
     {
         USPPNet_updateIndex++;
         
         USPPNet_methods = USPPNet_methods.USPPNet_AppendArray(method);
-        USPPNet_args = USPPNet_args.USPPNet_AppendArray(args.Length);
 
         foreach (var arg in args)
         {
             var argType = arg.GetType();
 
 #if USPPNet_byte
-            USPPNet_args_byte = USPPNet_args_byte.USPPNet_AppendArray(argType == typeof(byte) ? arg : 0x0);
+            if (argType == typeof(byte))
+                USPPNet_args_byte = USPPNet_args_byte.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_int
-            USPPNet_args_int = USPPNet_args_int.USPPNet_AppendArray(argType == typeof(int) ? arg : 0);
+            if (argType == typeof(int))
+                USPPNet_args_int = USPPNet_args_int.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_string
-            USPPNet_args_string = USPPNet_args_string.USPPNet_AppendArray(argType == typeof(string) ? arg : """");
+            if (argType == typeof(string))
+                USPPNet_args_string = USPPNet_args_string.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_bool
-            USPPNet_args_bool = USPPNet_args_bool.USPPNet_AppendArray(argType == typeof(bool) ? arg : false);
+            if (argType == typeof(bool))
+                USPPNet_args_bool = USPPNet_args_bool.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_short
-            USPPNet_args_short = USPPNet_args_short.USPPNet_AppendArray(argType == typeof(short) ? arg : 0);
+            if (argType == typeof(short))
+                USPPNet_args_short = USPPNet_args_short.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_uint
-            USPPNet_args_uint = USPPNet_args_uint.USPPNet_AppendArray(argType == typeof(uint) ? arg : 0);
+            if (argType == typeof(uint))
+                USPPNet_args_uint = USPPNet_args_uint.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_long
-            USPPNet_args_long = USPPNet_args_long.USPPNet_AppendArray(argType == typeof(long) ? arg : 0);
+            if (argType == typeof(long))
+                USPPNet_args_long = USPPNet_args_long.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_ulong
-            USPPNet_args_ulong = USPPNet_args_ulong.USPPNet_AppendArray(argType == typeof(ulong) ? arg : 0);
+            if (argType == typeof(ulong))
+                USPPNet_args_ulong = USPPNet_args_ulong.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_float
-            USPPNet_args_float = USPPNet_args_float.USPPNet_AppendArray(argType == typeof(float) ? arg : 0f);
+            if (argType == typeof(float))
+                USPPNet_args_float = USPPNet_args_float.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_double
-            USPPNet_args_double = USPPNet_args_double.USPPNet_AppendArray(argType == typeof(double) ? arg : 0f);
+            if (argType == typeof(double))
+                USPPNet_args_double = USPPNet_args_double.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_Vector2
-            USPPNet_args_Vector2 = USPPNet_args_Vector2.USPPNet_AppendArray(argType == typeof(Vector2) ? arg : new Vector2(0,0));
+            if (argType == typeof(Vector2))
+                USPPNet_args_Vector2 = USPPNet_args_Vector2.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_Vector3
-            USPPNet_args_Vector3 = USPPNet_args_Vector3.USPPNet_AppendArray(argType == typeof(Vector3) ? arg : new Vector3(0,0, 0));
+            if (argType == typeof(Vector3))
+                USPPNet_args_Vector3 = USPPNet_args_Vector3.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_Vector4
-            USPPNet_args_Vector4 = USPPNet_args_Vector4.USPPNet_AppendArray(argType == typeof(Vector4) ? arg : new Vector4(0,0, 0, 0));
+            if (argType == typeof(Vector4))
+                USPPNet_args_Vector4 = USPPNet_args_Vector4.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_Quaternion
-            USPPNet_args_Quaternion = USPPNet_args_Quaternion.USPPNet_AppendArray(argType == typeof(Quaternion) ? arg : new Quaternion());
+            if (argType == typeof(Quaternion))
+                USPPNet_args_Quaternion = USPPNet_args_Quaternion.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_VRCUrl
-            USPPNet_args_VRCUrl = USPPNet_args_VRCUrl.USPPNet_AppendArray(argType == typeof(VRCUrl) ? arg : """");
+            if (argType == typeof(VRCUrl))
+                USPPNet_args_VRCUrl = USPPNet_args_VRCUrl.USPPNet_AppendArray(arg);
 #endif
 #if USPPNet_Color
-            USPPNet_args_Color = USPPNet_args_Color.USPPNet_AppendArray(argType == typeof(Color) ? arg : new Color(0,0,0));
+            if (argType == typeof(Color))
+                USPPNet_args_Color = USPPNet_args_Color.USPPNet_AppendArray(arg);
 #endif
         }
     }
@@ -162,7 +176,6 @@ namespace USPPNet
         {
             Debug.Log($""Sent: {result.byteCount}"");
     USPPNet_methods = USPPNet_methods_empty; 
-    USPPNet_args = USPPNet_args_empty;
             
 #if USPPNet_byte
             USPPNet_args_byte = USPPNet_args_byte_empty;
@@ -216,16 +229,31 @@ namespace USPPNet
         #endregion
 
         #region OnDeserialization
-        public static string USPPNetOnDeserialization = @"if (USPPNet_updateIndexLast != USPPNet_updateIndex)
+        public static string USPPNetOnDeserialization = @"
+        int USPPNet_args_byte_offset = 0;
+        int USPPNet_args_int_offset = 0;
+        int USPPNet_args_string_offset = 0;
+        int USPPNet_args_bool_offset = 0;
+        int USPPNet_args_short_offset = 0;
+        int USPPNet_args_uint_offset = 0;
+        int USPPNet_args_long_offset = 0;
+        int USPPNet_args_ulong_offset = 0;
+        int USPPNet_args_float_offset = 0;
+        int USPPNet_args_double_offset = 0;
+        int USPPNet_args_Vector2_offset = 0;
+        int USPPNet_args_Vector3_offset = 0;
+        int USPPNet_args_Vector4_offset = 0;
+        int USPPNet_args_Quaternion_offset = 0;
+        int USPPNet_args_VRCUrl_offset = 0;
+        int USPPNet_args_Color_offset = 0;
+        
+        if (USPPNet_updateIndexLast != USPPNet_updateIndex)
         {
-            var argOffset = 0;
             for (var call = 0; call < USPPNet_methods.Length; call++)
             {
                 var method = USPPNet_methods[call];
 
                 // USPPNet TEMP REPLACE ME!!!
-
-                argOffset += USPPNet_args[call];
             }
         }
 
@@ -336,19 +364,49 @@ namespace USPPNet
             foreach (var func in functionNames)
             {
                 var tempArgs = "";
+                var argindex = new Dictionary<string, int>();
                 for (var index = 0; index < functions[func].Length; index++)
                 {
                     var argType = functions[func][index];
                     if (index > 0)
                         tempArgs += ", ";
+
+                    int offset;
+                    if (!argindex.ContainsKey(argType))
+                    {
+                        offset = 0;
+                        argindex.Add(argType, 1);
+                    }
+                    else
+                    {
+                        offset = argindex[argType];
+                        argindex[argType]++;
+                    }
+
+                    tempArgs += $"USPPNet_args_{argType}[USPPNet_args_{argType}_offset + {offset}]";
                     
-                    tempArgs += $"USPPNet_args_{argType}[call + argOffset + {index}]";
                 }
 
                 tempIf += $@"
                 if(method == ""{func}"") "+"{"+$@"
                     {func}({tempArgs});
-                "+"}\n";
+                    USPPNet_args_byte_offset += {functions[func].Count(s => s == "byte" )};
+                    USPPNet_args_int_offset += {functions[func].Count(s => s == "int" )};
+                    USPPNet_args_string_offset += {functions[func].Count(s => s == "string" )};
+                    USPPNet_args_bool_offset += {functions[func].Count(s => s == "bool" )};
+                    USPPNet_args_short_offset += {functions[func].Count(s => s == "short" )};
+                    USPPNet_args_uint_offset += {functions[func].Count(s => s == "uint" )};
+                    USPPNet_args_long_offset += {functions[func].Count(s => s == "long" )};
+                    USPPNet_args_ulong_offset += {functions[func].Count(s => s == "ulong" )};
+                    USPPNet_args_float_offset += {functions[func].Count(s => s == "float" )};
+                    USPPNet_args_double_offset += {functions[func].Count(s => s == "double" )};
+                    USPPNet_args_Vector2_offset += {functions[func].Count(s => s == "Vector2" )};
+                    USPPNet_args_Vector3_offset += {functions[func].Count(s => s == "Vector3" )};
+                    USPPNet_args_Vector4_offset += {functions[func].Count(s => s == "Vector4" )};
+                    USPPNet_args_Quaternion_offset += {functions[func].Count(s => s == "Quaternion" )};
+                    USPPNet_args_VRCUrl_offset += {functions[func].Count(s => s == "VRCUrl" )};
+                    USPPNet_args_Color_offset += {functions[func].Count(s => s == "Color" )};
+                "+"}\n"; // Hate it, but it's finneeee, probably also slow, but i'm too lazy to do it *smartly*
             }
 
             return RemoveNewLines(tempIf);
@@ -388,7 +446,7 @@ namespace USPPNet
             lines = lines.replace_USPPNet_Calls(ref inst.functions).replace_Placeholder_Comments(ref inst.functions);
 
             prog = lines.Aggregate("", (current, line) => current + line + "\n");
-            //Debug.Log(prog); // Uncomment to get program after parsing
+            Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
         }
