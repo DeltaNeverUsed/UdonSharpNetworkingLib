@@ -354,6 +354,11 @@ namespace USPPNet
             return RemoveNewLines(tempIf);
         }
 
+        private static bool Uses_USPPNet(ref string prog)
+        {
+            return prog.Contains("using USPPNet;");
+        }
+
         private static string[] replace_Placeholder_Comments(this string[] lines, ref Dictionary<string, string[]> functions)
         {
             var methcall = create_OnDeserialization_MethodCall(ref functions);
@@ -372,6 +377,9 @@ namespace USPPNet
 
         public static string Parse(string prog)
         {
+            if (!Uses_USPPNet(ref prog))
+                return prog;
+            
             PreProcessorInstance inst = new PreProcessorInstance();
             var lines = prog.Split(new [] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
