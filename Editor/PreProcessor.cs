@@ -446,7 +446,7 @@ namespace USPPNet
             lines = lines.replace_USPPNet_Calls(ref inst.functions).replace_Placeholder_Comments(ref inst.functions);
 
             prog = lines.Aggregate("", (current, line) => current + line + "\n");
-            Debug.Log(prog); // Uncomment to get program after parsing
+            //Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
         }
