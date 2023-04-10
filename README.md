@@ -134,4 +134,5 @@ public class Cube : UdonSharpBehaviour
 5. Trying to call USPPNET_[FUNC NAME] on an gameObject/Component other than itself will not be networked, and get called on the local client instead.
 
 # The TODO list
+Rewrite and separate the patcher to make it less intrusive and more generic
 Make Arrays work
