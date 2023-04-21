@@ -2,12 +2,13 @@
  UdonSharp RPC with arguments!
 
 # How to use
-1. Clone the git repo into your Project's assets folder.
-2. Wait for it to patch the UdonSharp Compiler.
-3. Include USPPNet and System in your script.
-4. Add "// USPPNet Init" at the bottom of your UdonSharpBehaviour.
-5. Add "// USPPNet OnDeserialization" inside your OnDeserialization function.
-6. Add "// USPPNet OnPostSerialization" inside your OnPostSerialization function.
+1. Download and install [USPPPatcher](https://github.com/DeltaNeverUsed/USPPPatcher), The code that used to be here for patching the U# compiler has been moved out into a different project
+2. Clone the git repo into your Project's assets folder.
+3. Wait for it to patch the UdonSharp Compiler.
+4. Include USPPNet and System in your script.
+5. Add "// USPPNet Init" at the bottom of your UdonSharpBehaviour.
+6. Add "// USPPNet OnDeserialization" inside your OnDeserialization function.
+7. Add "// USPPNet OnPostSerialization" inside your OnPostSerialization function.
     - It is semi important that OnDeserialization comes before OnPostSerialization, this is mainly to prevent in accurate compile errors, for the same reason you should put all of your own code before and of the "// USPPNet" comments.
 
 ## Usage

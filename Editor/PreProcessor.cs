@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using UdonSharp.Compiler;
 using UnityEditor;
-using UnityEngine;
+
 
 namespace USPPNet
 {
@@ -14,7 +11,7 @@ namespace USPPNet
     {
         public Dictionary<string,string[]> functions;
     }
-
+    
     public static class PreProcessorSnippits
     {
         #region Init
@@ -433,7 +430,7 @@ namespace USPPNet
             return lines;
         }
 
-        public static string Parse(string prog)
+        private static string Parse(string prog)
         {
             if (!Uses_USPPNet(ref prog))
                 return prog;
@@ -449,6 +446,12 @@ namespace USPPNet
             //Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
+        }
+
+        [InitializeOnLoadMethod]
+        private static void Subscribe()
+        {
+            USPPPatcher.Editor.PPHandler.Subscribe(Parse, 1, "USPPNet");
         }
     }
 }
