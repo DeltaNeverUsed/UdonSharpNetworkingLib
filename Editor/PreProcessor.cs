@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 
+using USPPPatcher.Editor;
+
 
 namespace USPPNet
 {
@@ -260,7 +262,6 @@ namespace USPPNet
     
     public static class PreProcessor
     {
-
         private static string RemoveNewLines(string code)
         {
             return code.Replace('\n', ' ');
@@ -430,11 +431,11 @@ namespace USPPNet
             return lines;
         }
 
-        private static string Parse(string prog)
+        private static string Parse(string prog, PPInfo info)
         {
             if (!Uses_USPPNet(ref prog))
                 return prog;
-            
+
             PreProcessorInstance inst = new PreProcessorInstance();
             var lines = prog.Split(new [] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
@@ -451,7 +452,7 @@ namespace USPPNet
         [InitializeOnLoadMethod]
         private static void Subscribe()
         {
-            USPPPatcher.Editor.PPHandler.Subscribe(Parse, 1, "USPPNet");
+            PPHandler.Subscribe(Parse, 1, "USPPNet", false);
         }
     }
 }
