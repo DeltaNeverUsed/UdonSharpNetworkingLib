@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 
-using USPPPatcher.Editor;
-
+using USPPPatcher;
 
 namespace USPPNet
 {
