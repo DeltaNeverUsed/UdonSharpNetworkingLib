@@ -133,7 +133,7 @@ public class Cube : UdonSharpBehaviour
 3. Not all value types are supported.
 4. Network usage is relatively high ~150 Bytes(increases with more "USPPNet_[TYPE]" defines) for one call, it's not linear so two calls at once would take ~170 bytes(for both). Theses are the results from the demo.
 5. Trying to call USPPNET_[FUNC NAME] on an gameObject/Component other than itself will not be networked, and get called on the local client instead.
-6. The function overloads will cause USPPNet to crash
+6. Using function overloads will cause USPPNet to crash
 
 # The TODO list
 Make Arrays work \
