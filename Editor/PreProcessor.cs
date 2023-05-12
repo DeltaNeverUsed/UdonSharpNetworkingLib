@@ -451,7 +451,7 @@ namespace USPPNet
         [InitializeOnLoadMethod]
         private static void Subscribe()
         {
-            PPHandler.Subscribe(Parse, 1, "USPPNet", false);
+            PPHandler.Subscribe(Parse, 1, "USPPNet");
         }
     }
 }
