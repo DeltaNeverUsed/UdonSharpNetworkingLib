@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR && !COMPILER_UDONSHARP
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -455,3 +456,4 @@ namespace USPPNet
         }
     }
 }
+#endif  
