@@ -18,6 +18,7 @@ namespace USPPNet
     {
         #region Init
         public static string USPPNetInit = @"
+    public int bytesSent;
     private int USPPNet_updateIndexLast = -1;
     [UdonSynced] private int USPPNet_updateIndex = -1;
     [UdonSynced] private string[] USPPNet_methods = Array.Empty<string>();
@@ -173,7 +174,7 @@ namespace USPPNet
         #region OnPostSerialization
         public static string USPPNetOnPostSerialization = @"if (result.success)
         {
-            Debug.Log($""Sent: {result.byteCount}"");
+            bytesSent = result.byteCount;
     USPPNet_methods = USPPNet_methods_empty; 
             
 #if USPPNet_byte
