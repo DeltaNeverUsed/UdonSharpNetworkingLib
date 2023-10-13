@@ -42,3 +42,4 @@ public class Cube : UdonSharpBehaviour
 
     // USPPNet Init
 }
+

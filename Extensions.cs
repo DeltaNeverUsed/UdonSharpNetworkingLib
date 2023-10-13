@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using JetBrains.Annotations;
 
+// ReSharper disable once CheckNamespace
 namespace USPPNet
 {
     public static class USFuncs
@@ -39,6 +35,15 @@ namespace USPPNet
             return array.USPPNet_ConcatArray(new []{ (T)item });
         }
 
+        public static int USPPNet_IndexOf<T>(this T[] array, T needle)
+        {
+            for (var i = 0; i < array.Length; i++)
+            {
+                if (array[i].Equals(needle))
+                    return i;
+            }
 
+            return -1;
+        }
     }
 }

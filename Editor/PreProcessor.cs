@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
-
+using UnityEngine;
 using USPPPatcher;
 
 namespace USPPNet
@@ -17,11 +17,13 @@ namespace USPPNet
     public static class PreProcessorSnippits
     {
         #region Init
+        
         public static string USPPNetInit = @"
     public int bytesSent;
-    private int USPPNet_updateIndexLast = -1;
-    [UdonSynced] private int USPPNet_updateIndex = -1;
-    [UdonSynced] private string[] USPPNet_methods = Array.Empty<string>();
+    private byte USPPNet_updateIndexLast = 0;
+    // USPPNet TEMP REPLACE MethodIndex
+    [UdonSynced] private byte USPPNet_updateIndex = 0;
+    [UdonSynced] private byte[] USPPNet_methods = Array.Empty<byte>();  
 
 #if USPPNet_byte
     [UdonSynced] private byte[] USPPNet_args_byte = Array.Empty<byte>();
@@ -89,14 +91,23 @@ namespace USPPNet
     private VRCUrl[] USPPNet_args_VRCUrl_empty = Array.Empty<VRCUrl>();
     private Color[] USPPNet_args_Color_empty = Array.Empty<Color>();
     
-    private string[] USPPNet_methods_empty = Array.Empty<string>();
+    private byte[] USPPNet_methods_empty = Array.Empty<byte>();
     private int[] USPPNet_args_empty = Array.Empty<int>();
 
         private void USPPNet_RPC(string method, params object[] args)
-    {
-        USPPNet_updateIndex++;
+    {   
+        if(USPPNet_methods.Length == 0)
+        {
+            USPPNet_updateIndex = (byte)((USPPNet_updateIndex + 1) % 254);
+        }
         
-        USPPNet_methods = USPPNet_methods.USPPNet_AppendArray(method);
+        var callIndex = USPPNet_methodNames.USPPNet_IndexOf(method);
+        if (callIndex == -1)
+        {
+            return;
+        }
+
+        USPPNet_methods = USPPNet_methods.USPPNet_AppendArray((byte)callIndex);
 
         foreach (var arg in args)
         {
@@ -353,6 +364,11 @@ namespace USPPNet
             return lines;
         }
 
+        private static string create_MethodIndexList(ref Dictionary<string, string[]> functions)
+        {
+            return functions.Aggregate("", (current, func) => current + $"\"{func.Key}\", ");
+        }
+
         private static string create_OnDeserialization_MethodCall(ref Dictionary<string, string[]> functions)
         {
             var tempIf = "";
@@ -387,7 +403,7 @@ namespace USPPNet
                 }
 
                 tempIf += $@"
-                if(method == ""{func}"") "+"{"+$@"
+                if(method == {functions.Keys.ToArray().USPPNet_IndexOf(func)}) "+"{"+$@"
                     {func}({tempArgs});
                     USPPNet_args_byte_offset += {functions[func].Count(s => s == "byte" )};
                     USPPNet_args_int_offset += {functions[func].Count(s => s == "int" )};
@@ -419,6 +435,7 @@ namespace USPPNet
         private static string[] replace_Placeholder_Comments(this string[] lines, ref Dictionary<string, string[]> functions)
         {
             var methcall = create_OnDeserialization_MethodCall(ref functions);
+            var callIndex = create_MethodIndexList(ref functions);
             //Debug.Log("Goobed:"+methcall);
             
             for (var i = 0; i < lines.Length; i++)
@@ -427,6 +444,8 @@ namespace USPPNet
                 lines[i] = lines[i].Replace("// USPPNet OnPostSerialization",  PreProcessorSnippits.USPPNetOnPostSerialization);
                 lines[i] = lines[i].Replace("// USPPNet OnDeserialization",  RemoveNewLines(PreProcessorSnippits.USPPNetOnDeserialization));
                 lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE ME!!!",  methcall);
+                lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE MethodIndex",  "private string[] USPPNet_methodNames = { "+callIndex+" };");
+                
             }
             
             return lines;
@@ -443,8 +462,9 @@ namespace USPPNet
             get_USPPNet_Functions(lines, ref inst.functions);
 
             lines = lines.replace_USPPNet_Calls(ref inst.functions).replace_Placeholder_Comments(ref inst.functions);
-
+            
             prog = lines.Aggregate("", (current, line) => current + line + "\n");
+            
             //Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
