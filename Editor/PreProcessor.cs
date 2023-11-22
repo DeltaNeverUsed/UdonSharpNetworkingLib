@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -371,8 +372,7 @@ namespace USPPNet
 
         private static string create_OnDeserialization_MethodCall(ref Dictionary<string, string[]> functions)
         {
-            var tempIf = "";
-
+            var sb = new StringBuilder();
             var functionNames = functions.Keys.ToArray();
             
             
@@ -398,38 +398,60 @@ namespace USPPNet
                         argindex[argType]++;
                     }
 
-                    tempArgs += $"USPPNet_args_{argType}[USPPNet_args_{argType}_offset + {offset}]";
-                    
+                    if (offset > 0)
+                        tempArgs += $"USPPNet_args_{argType}[USPPNet_args_{argType}_offset + {offset}]";
+                    else
+                        tempArgs += $"USPPNet_args_{argType}[USPPNet_args_{argType}_offset]";
                 }
 
-                tempIf += $@"
-                if(method == {functions.Keys.ToArray().USPPNet_IndexOf(func)}) "+"{"+$@"
-                    {func}({tempArgs});
-                    USPPNet_args_byte_offset += {functions[func].Count(s => s == "byte" )};
-                    USPPNet_args_int_offset += {functions[func].Count(s => s == "int" )};
-                    USPPNet_args_string_offset += {functions[func].Count(s => s == "string" )};
-                    USPPNet_args_bool_offset += {functions[func].Count(s => s == "bool" )};
-                    USPPNet_args_short_offset += {functions[func].Count(s => s == "short" )};
-                    USPPNet_args_uint_offset += {functions[func].Count(s => s == "uint" )};
-                    USPPNet_args_long_offset += {functions[func].Count(s => s == "long" )};
-                    USPPNet_args_ulong_offset += {functions[func].Count(s => s == "ulong" )};
-                    USPPNet_args_float_offset += {functions[func].Count(s => s == "float" )};
-                    USPPNet_args_double_offset += {functions[func].Count(s => s == "double" )};
-                    USPPNet_args_Vector2_offset += {functions[func].Count(s => s == "Vector2" )};
-                    USPPNet_args_Vector3_offset += {functions[func].Count(s => s == "Vector3" )};
-                    USPPNet_args_Vector4_offset += {functions[func].Count(s => s == "Vector4" )};
-                    USPPNet_args_Quaternion_offset += {functions[func].Count(s => s == "Quaternion" )};
-                    USPPNet_args_VRCUrl_offset += {functions[func].Count(s => s == "VRCUrl" )};
-                    USPPNet_args_Color_offset += {functions[func].Count(s => s == "Color" )};
-                "+"}\n"; // Hate it, but it's finneeee, probably also slow, but i'm too lazy to do it *smartly*
+                sb.Append($@"
+                if(method == {functions.Keys.ToArray().USPPNet_IndexOf(func)}) " + "{" + $@"
+                    {func}({tempArgs});");
+
+                int count;
+                
+                if ((count = functions[func].Count(s => s == "byte" )) > 0)
+                    sb.Append($"USPPNet_args_byte_offset += {count};");
+                if ((count = functions[func].Count(s => s == "int" )) > 0)
+                    sb.Append($"USPPNet_args_int_offset += {count};");
+                if ((count = functions[func].Count(s => s == "string" )) > 0)
+                    sb.Append($"USPPNet_args_string_offset += {count};");
+                if ((count = functions[func].Count(s => s == "bool" )) > 0)
+                    sb.Append($"USPPNet_args_bool_offset += {count};");
+                if ((count = functions[func].Count(s => s == "short" )) > 0)
+                    sb.Append($"USPPNet_args_short_offset += {count};");
+                if ((count = functions[func].Count(s => s == "uint" )) > 0)
+                    sb.Append($"USPPNet_args_uint_offset += {count};");
+                if ((count = functions[func].Count(s => s == "long" )) > 0)
+                    sb.Append($"USPPNet_args_long_offset += {count};");
+                if ((count = functions[func].Count(s => s == "ulong" )) > 0)
+                    sb.Append($"USPPNet_args_ulong_offset += {count};");
+                if ((count = functions[func].Count(s => s == "float" )) > 0)
+                    sb.Append($"USPPNet_args_float_offset += {count};");
+                if ((count = functions[func].Count(s => s == "double" )) > 0)
+                    sb.Append($"USPPNet_args_double_offset += {count};");
+                if ((count = functions[func].Count(s => s == "Vector2" )) > 0)
+                    sb.Append($"USPPNet_args_Vector2_offset += {count};");
+                if ((count = functions[func].Count(s => s == "Vector3" )) > 0)
+                    sb.Append($"USPPNet_args_Vector3_offset += {count};");
+                if ((count = functions[func].Count(s => s == "Vector4" )) > 0)
+                    sb.Append($"USPPNet_args_Vector4_offset += {count};");
+                if ((count = functions[func].Count(s => s == "Quaternion" )) > 0)
+                    sb.Append($"USPPNet_args_Quaternion_offset += {count};");
+                if ((count = functions[func].Count(s => s == "VRCUrl" )) > 0)
+                    sb.Append($"USPPNet_args_VRCUrl_offset += {count};");
+                if ((count = functions[func].Count(s => s == "Color" )) > 0)
+                    sb.Append($"USPPNet_args_Color_offset += {count};");
+                sb.Append("continue;");
+                sb.Append("}\n");
             }
 
-            return RemoveNewLines(tempIf);
+            return RemoveNewLines(sb.ToString());
         }
 
         private static bool Uses_USPPNet(ref string prog)
         {
-            return prog.Contains("using USPPNet;");
+            return prog.Contains("using USPPNet;") && prog.Contains("// USPPNet Init");
         }
 
         private static string[] replace_Placeholder_Comments(this string[] lines, ref Dictionary<string, string[]> functions)
