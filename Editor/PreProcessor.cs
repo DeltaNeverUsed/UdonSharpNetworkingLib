@@ -5,20 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using UnityEngine;
 using USPPPatcher;
 
-namespace USPPNet
-{
-    public class PreProcessorInstance
-    {
-        public Dictionary<string,string[]> functions;
+namespace USPPNet {
+    public class PreProcessorInstance {
+        public Dictionary<string, string[]> functions;
     }
-    
-    public static class PreProcessorSnippits
-    {
+
+    public static class PreProcessorSnippits {
         #region Init
-        
+
         public static string USPPNetInit = @"
     public int bytesSent;
     private byte USPPNet_updateIndexLast = 0;
@@ -181,9 +177,11 @@ namespace USPPNet
         }
     }
 ";
+
         #endregion
 
         #region OnPostSerialization
+
         public static string USPPNetOnPostSerialization = @"if (result.success)
         {
             bytesSent = result.byteCount;
@@ -238,9 +236,11 @@ namespace USPPNet
             USPPNet_args_Color = USPPNet_args_Color_empty;
 #endif
 }";
+
         #endregion
 
         #region OnDeserialization
+
         public static string USPPNetOnDeserialization = @"
         int USPPNet_args_byte_offset = 0;
         int USPPNet_args_int_offset = 0;
@@ -270,42 +270,34 @@ namespace USPPNet
         }
 
         USPPNet_updateIndexLast = USPPNet_updateIndex;";
+
         #endregion
     }
-    
-    public static class PreProcessor
-    {
-        private static string RemoveNewLines(string code)
-        {
-            return code.Replace('\n', ' ');
-        }
-        
-        private static string StripComments(string code)
-        {
+
+    public static class PreProcessor {
+        private static string RemoveNewLines(string code) => code.Replace('\n', ' ');
+
+        private static string StripComments(string code) {
             var re = @"(@(?:""[^""]*"")+|""(?:[^""\n\\]+|\\.)*""|'(?:[^'\n\\]+|\\.)*')|//.*|/\*(?s:.*?)\*/";
             return Regex.Replace(code, re, "$1");
         }
-        private static string[] StripComments(string[] code)
-        {
+
+        private static string[] StripComments(string[] code) {
             for (var i = 0; i < code.Length; i++)
-            {
                 code[i] = StripComments(code[i]);
-            }
             return code;
         }
 
-        private static void get_USPPNet_Functions(string[] lines, ref Dictionary<string, string[]> functions)
-        {
+        private static void get_USPPNet_Functions(string[] lines, ref Dictionary<string, string[]> functions) {
             functions = new Dictionary<string, string[]>();
-            
-            foreach (var line in lines)
-            {
+
+            foreach (var line in lines) {
                 var l = StripComments(line);
                 var start = l.IndexOf("void USPPNET_", StringComparison.Ordinal);
                 if (start == -1) // check if line is USPPNET function
                     continue;
 
-                var argsStart = l.IndexOf("(", start+5, StringComparison.Ordinal)+1;
+                var argsStart = l.IndexOf("(", start + 5, StringComparison.Ordinal) + 1;
                 var argsEnd = l.IndexOf(")", argsStart, StringComparison.Ordinal);
 
                 var argsSubstring = l.Substring(argsStart, argsEnd - argsStart);
@@ -319,27 +311,24 @@ namespace USPPNet
                     functionArgs[index] = split[0];
                 }
 
-                var functionName = l.Substring(start+5, argsStart-(start+6));
-                
+                var functionName = l.Substring(start + 5, argsStart - (start + 6));
+
                 //Debug.Log($"Function: {functionName}, arg types: {ObjectDumper.Dump(functionArgs)}");
-                
+
                 functions.Add(functionName, functionArgs);
-                
             }
         }
-        
+
         /*
          * Turns USPPNET_Test("Hello there!", 69);
          * Into USPPNet_RPC("USPPNET_Test", "Hello there!", 69);
          */
-        private static string[] replace_USPPNet_Calls(this string[] lines, ref Dictionary<string, string[]> functions)
-        {
+        private static string[] replace_USPPNet_Calls(this string[] lines, ref Dictionary<string, string[]> functions) {
             var functionNames = functions.Keys.ToArray();
 
             var lineNum = 0;
 
-            for (var index = 0; index < lines.Length; index++)
-            {
+            for (var index = 0; index < lines.Length; index++) {
                 var line = lines[index];
                 lineNum++;
                 var l = StripComments(line);
@@ -365,35 +354,29 @@ namespace USPPNet
             return lines;
         }
 
-        private static string create_MethodIndexList(ref Dictionary<string, string[]> functions)
-        {
+        private static string create_MethodIndexList(ref Dictionary<string, string[]> functions) {
             return functions.Aggregate("", (current, func) => current + $"\"{func.Key}\", ");
         }
 
-        private static string create_OnDeserialization_MethodCall(ref Dictionary<string, string[]> functions)
-        {
+        private static string create_OnDeserialization_MethodCall(ref Dictionary<string, string[]> functions) {
             var sb = new StringBuilder();
             var functionNames = functions.Keys.ToArray();
-            
-            
-            foreach (var func in functionNames)
-            {
+
+
+            foreach (var func in functionNames) {
                 var tempArgs = "";
                 var argindex = new Dictionary<string, int>();
-                for (var index = 0; index < functions[func].Length; index++)
-                {
+                for (var index = 0; index < functions[func].Length; index++) {
                     var argType = functions[func][index];
                     if (index > 0)
                         tempArgs += ", ";
 
                     int offset;
-                    if (!argindex.ContainsKey(argType))
-                    {
+                    if (!argindex.ContainsKey(argType)) {
                         offset = 0;
                         argindex.Add(argType, 1);
                     }
-                    else
-                    {
+                    else {
                         offset = argindex[argType];
                         argindex[argType]++;
                     }
@@ -409,38 +392,38 @@ namespace USPPNet
                     {func}({tempArgs});");
 
                 int count;
-                
-                if ((count = functions[func].Count(s => s == "byte" )) > 0)
+
+                if ((count = functions[func].Count(s => s == "byte")) > 0)
                     sb.Append($"USPPNet_args_byte_offset += {count};");
-                if ((count = functions[func].Count(s => s == "int" )) > 0)
+                if ((count = functions[func].Count(s => s == "int")) > 0)
                     sb.Append($"USPPNet_args_int_offset += {count};");
-                if ((count = functions[func].Count(s => s == "string" )) > 0)
+                if ((count = functions[func].Count(s => s == "string")) > 0)
                     sb.Append($"USPPNet_args_string_offset += {count};");
-                if ((count = functions[func].Count(s => s == "bool" )) > 0)
+                if ((count = functions[func].Count(s => s == "bool")) > 0)
                     sb.Append($"USPPNet_args_bool_offset += {count};");
-                if ((count = functions[func].Count(s => s == "short" )) > 0)
+                if ((count = functions[func].Count(s => s == "short")) > 0)
                     sb.Append($"USPPNet_args_short_offset += {count};");
-                if ((count = functions[func].Count(s => s == "uint" )) > 0)
+                if ((count = functions[func].Count(s => s == "uint")) > 0)
                     sb.Append($"USPPNet_args_uint_offset += {count};");
-                if ((count = functions[func].Count(s => s == "long" )) > 0)
+                if ((count = functions[func].Count(s => s == "long")) > 0)
                     sb.Append($"USPPNet_args_long_offset += {count};");
-                if ((count = functions[func].Count(s => s == "ulong" )) > 0)
+                if ((count = functions[func].Count(s => s == "ulong")) > 0)
                     sb.Append($"USPPNet_args_ulong_offset += {count};");
-                if ((count = functions[func].Count(s => s == "float" )) > 0)
+                if ((count = functions[func].Count(s => s == "float")) > 0)
                     sb.Append($"USPPNet_args_float_offset += {count};");
-                if ((count = functions[func].Count(s => s == "double" )) > 0)
+                if ((count = functions[func].Count(s => s == "double")) > 0)
                     sb.Append($"USPPNet_args_double_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Vector2" )) > 0)
+                if ((count = functions[func].Count(s => s == "Vector2")) > 0)
                     sb.Append($"USPPNet_args_Vector2_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Vector3" )) > 0)
+                if ((count = functions[func].Count(s => s == "Vector3")) > 0)
                     sb.Append($"USPPNet_args_Vector3_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Vector4" )) > 0)
+                if ((count = functions[func].Count(s => s == "Vector4")) > 0)
                     sb.Append($"USPPNet_args_Vector4_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Quaternion" )) > 0)
+                if ((count = functions[func].Count(s => s == "Quaternion")) > 0)
                     sb.Append($"USPPNet_args_Quaternion_offset += {count};");
-                if ((count = functions[func].Count(s => s == "VRCUrl" )) > 0)
+                if ((count = functions[func].Count(s => s == "VRCUrl")) > 0)
                     sb.Append($"USPPNet_args_VRCUrl_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Color" )) > 0)
+                if ((count = functions[func].Count(s => s == "Color")) > 0)
                     sb.Append($"USPPNet_args_Color_offset += {count};");
                 sb.Append("continue;");
                 sb.Append("}\n");
@@ -449,54 +432,51 @@ namespace USPPNet
             return RemoveNewLines(sb.ToString());
         }
 
-        private static bool Uses_USPPNet(ref string prog)
-        {
-            return prog.Contains("using USPPNet;") && prog.Contains("// USPPNet Init");
-        }
+        private static bool Uses_USPPNet(ref string prog) =>
+            prog.Contains("using USPPNet;") && prog.Contains("// USPPNet Init");
 
-        private static string[] replace_Placeholder_Comments(this string[] lines, ref Dictionary<string, string[]> functions)
-        {
+        private static string[] replace_Placeholder_Comments(this string[] lines,
+                                                             ref Dictionary<string, string[]> functions) {
             var methcall = create_OnDeserialization_MethodCall(ref functions);
             var callIndex = create_MethodIndexList(ref functions);
             //Debug.Log("Goobed:"+methcall);
-            
-            for (var i = 0; i < lines.Length; i++)
-            {
-                lines[i] = lines[i].Replace("// USPPNet Init",  PreProcessorSnippits.USPPNetInit);
-                lines[i] = lines[i].Replace("// USPPNet OnPostSerialization",  PreProcessorSnippits.USPPNetOnPostSerialization);
-                lines[i] = lines[i].Replace("// USPPNet OnDeserialization",  RemoveNewLines(PreProcessorSnippits.USPPNetOnDeserialization));
-                lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE ME!!!",  methcall);
-                lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE MethodIndex",  "private string[] USPPNet_methodNames = { "+callIndex+" };");
-                
+
+            for (var i = 0; i < lines.Length; i++) {
+                lines[i] = lines[i].Replace("// USPPNet Init", PreProcessorSnippits.USPPNetInit);
+                lines[i] = lines[i].Replace("// USPPNet OnPostSerialization",
+                    PreProcessorSnippits.USPPNetOnPostSerialization);
+                lines[i] = lines[i].Replace("// USPPNet OnDeserialization",
+                    RemoveNewLines(PreProcessorSnippits.USPPNetOnDeserialization));
+                lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE ME!!!", methcall);
+                lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE MethodIndex",
+                    "private string[] USPPNet_methodNames = { " + callIndex + " };");
             }
-            
+
             return lines;
         }
 
-        private static string Parse(string prog, PPInfo info)
-        {
+        private static string Parse(string prog, PPInfo info) {
             if (!Uses_USPPNet(ref prog))
                 return prog;
 
-            PreProcessorInstance inst = new PreProcessorInstance();
-            var lines = prog.Split(new [] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var inst = new PreProcessorInstance();
+            var lines = prog.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
             get_USPPNet_Functions(lines, ref inst.functions);
 
             lines = lines.replace_USPPNet_Calls(ref inst.functions).replace_Placeholder_Comments(ref inst.functions);
-            
+
             prog = lines.Aggregate("", (current, line) => current + line + "\n");
-            
+
             //Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
         }
 
         [InitializeOnLoadMethod]
-        private static void Subscribe()
-        {
+        private static void Subscribe() {
             PPHandler.Subscribe(Parse, 1, "USPPNet");
         }
     }
 }
-#endif  
+#endif
