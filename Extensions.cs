@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using VRC.SDK3.Data;
 
 // ReSharper disable once CheckNamespace
 namespace USPPNet
