@@ -1,6 +1,6 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 using Debug = UnityEngine.Debug;
@@ -81,29 +81,6 @@ namespace USPPNet {
     }
 
     public static class Serializer {
-        
-#if !COMPILER_UDONSHARP
-        public static void PrintWholeArray(Array obj) {
-            var sb = new StringBuilder();
-
-            void DPrint(Array obj, int currentIndent = 0) {
-                for (int i = 0; i < obj.Length; i++) {
-                    var current = obj.GetValue(i);
-
-                    var typeName = (" (" + (current == null ? "null" : current.GetType().Name)  + ")").PadRight(16, ' ');
-
-                    sb.AppendLine("".PadRight(currentIndent, ' ') + typeName + ": " + current);
-
-                    if (current != null && current.GetType().IsArray)
-                        DPrint((Array)current, currentIndent + 8);
-                }
-            }
-            DPrint(obj);
-            Debug.Log(sb.ToString());
-        }
-#endif
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static byte[] SubArray(byte[] array, int startIndex, int length) {
             var subArray = new byte[length];
             Array.Copy(array, startIndex, subArray, 0, length);
@@ -173,10 +150,8 @@ namespace USPPNet {
         // ReSharper disable once PossibleNullReferenceException
         public static bool IsArray(object input) => Utilities.IsValid(input) && input.GetType().FullName.EndsWith("[]");
 
-        public static Type GetTypeFromSerializedType(SerializedTypes type)
-        {
-            switch (type)
-            {
+        public static Type GetTypeFromSerializedType(SerializedTypes type) {
+            switch (type) {
                 case SerializedTypes.Boolean:
                     return typeof(bool);
                 case SerializedTypes.Byte:
@@ -227,10 +202,11 @@ namespace USPPNet {
                     return null;
             }
         }
+
         public static SerializedTypes GetSerializedType(object input) {
             if (!Utilities.IsValid(input))
                 return SerializedTypes.Null;
-            
+
             var type = input.GetType();
             var serializedType = SerializedTypes.Null;
 
@@ -278,12 +254,32 @@ namespace USPPNet {
                 serializedType = SerializedTypes.Quaternion;
             else if (type == typeof(DateTime) || type == typeof(DateTime[]))
                 serializedType = SerializedTypes.DateTime;
-            else {
+            else
                 Debug.LogError($"unsupported type: {type.FullName}");
-            }
 
             return serializedType;
         }
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+        public static void PrintWholeArray(Array obj) {
+            var sb = new StringBuilder();
+
+            void DPrint(Array obj, int currentIndent = 0) {
+                for (var i = 0; i < obj.Length; i++) {
+                    var current = obj.GetValue(i);
+
+                    var typeName = (" (" + (current == null ? "null" : current.GetType().Name) + ")").PadRight(16, ' ');
+
+                    sb.AppendLine("".PadRight(currentIndent, ' ') + typeName + ": " + current);
+
+                    if (current != null && current.GetType().IsArray)
+                        DPrint((Array)current, currentIndent + 8);
+                }
+            }
+
+            DPrint(obj);
+            Debug.Log(sb.ToString());
+        }
+#endif
 
         #region Deserialize
 
@@ -351,10 +347,10 @@ namespace USPPNet {
 
             while (objectIndex < serlSize) {
                 var type = (SerializedTypes)DeserializeByte(SubArray(bytes, byteIndex, 1));
-                
+
                 if (type == SerializedTypes.Array) {
                     var arrayLength = DeserializeUInt16(SubArray(bytes, byteIndex + 4, 2));
-                    
+
                     outputObjects[objectIndex] = DeserializeArray(SubArray(bytes, byteIndex + 1, arrayLength));
                     byteIndex += 1 + arrayLength;
                     objectIndex++;
@@ -368,7 +364,7 @@ namespace USPPNet {
                     objectIndex++;
                     continue;
                 }
-                
+
                 var byteSize = GetSizeFromType(type, null);
                 outputObjects[objectIndex] = DeserializeKnownType(SubArray(bytes, byteIndex + 1, byteSize - 1), type);
                 byteIndex += byteSize;
@@ -378,56 +374,70 @@ namespace USPPNet {
             return outputObjects;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool DeserializeBool(byte[] bytes) => bytes[0] > 0;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte DeserializeByte(byte[] bytes) => bytes[0];
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static sbyte DeserializeSByte(byte[] bytes) => (sbyte)(bytes[0] - 127);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static short DeserializeInt16(byte[] bytes) => (short)(bytes[0] + (bytes[1] << 8));
+        public static sbyte DeserializeSByte(byte[] bytes) => Convert.ToSByte(bytes[0] + sbyte.MinValue);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int DeserializeInt32(byte[] bytes) =>
-            bytes[0] +
-            (bytes[1] << 8) +
-            (bytes[2] << 16) +
-            (bytes[3] << 24);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long DeserializeInt64(byte[] bytes) =>
-            bytes[0] +
-            ((long)bytes[1] << 8) +
-            ((long)bytes[2] << 16) +
-            ((long)bytes[3] << 24) +
-            ((long)bytes[4] << 32) +
-            ((long)bytes[5] << 40) +
-            ((long)bytes[6] << 48) +
-            ((long)bytes[7] << 56);
+        public static short DeserializeInt16(byte[] bytes) {
+            var result = bytes[0] + ((bytes[1] & 0x7F) << 8);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            if ((bytes[1] & 0x80) != 0)
+                return (short)(short.MinValue + result);
+            return (short)result;
+        }
+
+
+        public static int DeserializeInt32(byte[] bytes) {
+            var result = bytes[0] +
+                         (bytes[1] << 8) +
+                         (bytes[2] << 16) +
+                         ((bytes[3] & 0x7F) << 24);
+
+            if ((bytes[3] & 0x80) != 0)
+                return int.MinValue + result;
+            return result;
+        }
+
+        public static long DeserializeInt64(byte[] bytes) {
+            var result = bytes[0] +
+                         (Convert.ToUInt64(bytes[1]) << 8) +
+                         (Convert.ToUInt64(bytes[2]) << 16) +
+                         (Convert.ToUInt64(bytes[3]) << 24) +
+                         (Convert.ToUInt64(bytes[4]) << 32) +
+                         (Convert.ToUInt64(bytes[5]) << 40) +
+                         (Convert.ToUInt64(bytes[6]) << 48) +
+                         (Convert.ToUInt64(bytes[7] & 0x7F) << 56);
+
+            if ((bytes[7] & 0x80) != 0)
+                return long.MinValue + (long)result;
+            return (long)result;
+        }
+
+
         public static ushort DeserializeUInt16(byte[] bytes) => (ushort)(bytes[0] + (bytes[1] << 8));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static uint DeserializeUInt32(byte[] bytes) =>
             bytes[0] +
-            (uint)(bytes[1] << 8) +
-            (uint)(bytes[2] << 16) +
-            (uint)(bytes[3] << 24);
+            (Convert.ToUInt32(bytes[1]) << 8) +
+            (Convert.ToUInt32(bytes[2]) << 16) +
+            (Convert.ToUInt32(bytes[3]) << 24);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static ulong DeserializeUInt64(byte[] bytes) =>
             bytes[0] +
-            ((ulong)bytes[1] << 8) +
-            ((ulong)bytes[2] << 16) +
-            ((ulong)bytes[3] << 24) +
-            ((ulong)bytes[4] << 32) +
-            ((ulong)bytes[5] << 40) +
-            ((ulong)bytes[6] << 48) +
-            ((ulong)bytes[7] << 56);
+            (Convert.ToUInt64(bytes[1]) << 8) +
+            (Convert.ToUInt64(bytes[2]) << 16) +
+            (Convert.ToUInt64(bytes[3]) << 24) +
+            (Convert.ToUInt64(bytes[4]) << 32) +
+            (Convert.ToUInt64(bytes[5]) << 40) +
+            (Convert.ToUInt64(bytes[6]) << 48) +
+            (Convert.ToUInt64(bytes[7]) << 56);
 
         // Warning: this sometimes has an error of about 0.000,000,000,000,000,000,000,000,000,000,000,000,004,177,807,732 
         public static float DeserializeSingle(byte[] bytes) {
@@ -446,7 +456,7 @@ namespace USPPNet {
 
             if (exponent == 0xFF && mantissa != 0)
                 return float.NaN;
-            
+
             var normalizedInverse = mantissa / 8388608f + 1;
             return normalizedInverse / Mathf.Pow(2, -exponent + 127) * sign;
         }
@@ -534,7 +544,7 @@ namespace USPPNet {
             return new Color(r, g, b, a);
         }
 
-        public static Color32 DeserializeColor32(byte[] bytes) => new Color(bytes[0], bytes[1], bytes[2], bytes[3]);
+        public static Color32 DeserializeColor32(byte[] bytes) => new Color32(bytes[0], bytes[1], bytes[2], bytes[3]);
 
         public static Vector2 DeserializeVector2(byte[] bytes) {
             var x = DeserializeSingle(SubArray(bytes, 0, 4));
@@ -575,7 +585,7 @@ namespace USPPNet {
             return new Vector4(x, y, z, w);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static Quaternion DeserializeQuaternion(byte[] bytes) {
             var deVec4 = DeserializeVector4(bytes);
             return new Quaternion(
@@ -586,26 +596,26 @@ namespace USPPNet {
             );
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static DateTime DeserializeDateTime(byte[] bytes) => new DateTime(DeserializeInt64(bytes));
 
 
         public static Array DeserializeArray(byte[] bytes) {
             var arrayType = (SerializedTypes)bytes[0];
-            
+
             if (arrayType == SerializedTypes.Array)
                 return null;
-            
+
             var arrayLength = DeserializeUInt16(SubArray(bytes, 1, 2));
             var byteIndex = 5;
-            
-            
+
+
             var newArray = Array.CreateInstance(GetTypeFromSerializedType(arrayType), arrayLength);
             if (arrayType == SerializedTypes.String) {
                 for (var i = 0; i < arrayLength; i++) {
                     var stringByteSize = DeserializeUInt16(SubArray(bytes, byteIndex, 2)) + 2;
                     newArray.SetValue(DeserializeString(SubArray(bytes, byteIndex, stringByteSize)), i);
-                
+
                     byteIndex += stringByteSize;
                 }
             }
@@ -616,11 +626,11 @@ namespace USPPNet {
                     byteIndex += typeSize;
                 }
             }
-            
+
 
             return newArray;
         }
-        
+
         #endregion
 
 
@@ -701,20 +711,18 @@ namespace USPPNet {
             }
 
             var byteArray = new byte[estimatedByteCount + (int)TypeSizes.Int16];
-            var serlSize = SerializeUInt16((UInt16)input.Length);
+            var serlSize = SerializeUInt16((ushort)input.Length);
             byteArray[0] = serlSize[0];
             byteArray[1] = serlSize[1];
-            
+
             var byteIndex = 2;
 
             for (var i = 0; i < input.Length; i++) {
-                
-                
                 if (isArray[i]) {
                     byteArray[byteIndex] = (byte)SerializedTypes.Array;
                     var arrayBytes = SerializeArray((Array)input[i], types[i]);
                     var arraySize = arrayBytes.Length;
-                    
+
                     Array.Copy(arrayBytes, 0, byteArray, byteIndex + 1, arraySize);
                     byteIndex += arraySize + 1;
                     continue;
@@ -729,7 +737,7 @@ namespace USPPNet {
                     byteIndex += stringSize + 1;
                     continue;
                 }
-                
+
                 byteArray[byteIndex] = (byte)((int)types[i] & 0xFF); // god, why udon
                 var byteSize = sizes[i];
 
@@ -740,53 +748,53 @@ namespace USPPNet {
             }
 
             //Debug.Log($"estimatedByteCount: {estimatedByteCount + 2}, actualMinifiedSize: {byteIndex}");
-            
+
             var minifiedByteArray = SubArray(byteArray, 0, byteIndex);
             return minifiedByteArray;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeBool(bool input) => new[] { Convert.ToByte(input) };
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeByte(byte input) => new[] { input };
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] SerializeSByte(sbyte input) => new[] { (byte)input };
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] SerializeSByte(sbyte input) => new[] { (byte)(input - sbyte.MinValue) };
+
+
         public static byte[] SerializeInt16(short input) {
             return new[] {
-                (byte)(input & 0xFF),
-                (byte)((input >> 8) & 0xFF)
+                Convert.ToByte(input & 0xFF),
+                Convert.ToByte((input >> 8) & 0xFF) // | Convert.ToByte(input >= 0 ? 0x0 : 0x80))
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeInt32(int input) {
             return new[] {
-                (byte)(input & 0xFF),
-                (byte)((input >> 8) & 0xFF),
-                (byte)((input >> 16) & 0xFF),
-                (byte)((input >> 24) & 0xFF)
+                Convert.ToByte(input & 0xFF),
+                Convert.ToByte((input >> 8) & 0xFF),
+                Convert.ToByte((input >> 16) & 0xFF),
+                Convert.ToByte((input >> 24) & 0xFF) //| Convert.ToByte(input >= 0 ? 0x0 : 0x80))
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeInt64(long input) {
             return new[] {
-                (byte)(input & 0xFF),
-                (byte)((input >> 8) & 0xFF),
-                (byte)((input >> 16) & 0xFF),
-                (byte)((input >> 24) & 0xFF),
-                (byte)((input >> 32) & 0xFF),
-                (byte)((input >> 40) & 0xFF),
-                (byte)((input >> 48) & 0xFF),
-                (byte)((input >> 56) & 0xFF)
+                Convert.ToByte(input & 0xFF),
+                Convert.ToByte((input >> 8) & 0xFF),
+                Convert.ToByte((input >> 16) & 0xFF),
+                Convert.ToByte((input >> 24) & 0xFF),
+                Convert.ToByte((input >> 32) & 0xFF),
+                Convert.ToByte((input >> 40) & 0xFF),
+                Convert.ToByte((input >> 48) & 0xFF),
+                Convert.ToByte((input >> 56) & 0xFF)
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeUInt16(ushort input) {
             return new[] {
                 (byte)(input & 0xFF),
@@ -794,7 +802,7 @@ namespace USPPNet {
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeUInt32(uint input) {
             return new[] {
                 (byte)(input & 0xFF),
@@ -804,7 +812,7 @@ namespace USPPNet {
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeUInt64(ulong input) {
             return new[] {
                 (byte)(input & 0xFF),
@@ -955,7 +963,7 @@ namespace USPPNet {
             }
 
             var newBuff = new byte[buffSize + 2];
-            Array.Copy(SerializeUInt16((UInt16)buffSize), newBuff, 2); // place array length as uint16 in first
+            Array.Copy(SerializeUInt16((ushort)buffSize), newBuff, 2); // place array length as uint16 in first
             Array.Copy(buffer, 0, newBuff, 2, buffSize);
             return newBuff;
         }
@@ -1037,11 +1045,11 @@ namespace USPPNet {
             return bytes;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeQuaternion(Quaternion input) =>
             SerializeVector4(new Vector4(input.x, input.y, input.z, input.w));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static byte[] SerializeDateTime(DateTime input) => SerializeInt64(input.Ticks);
 
         public static byte[] SerializeArray(Array input, SerializedTypes arrayType) {
@@ -1051,7 +1059,7 @@ namespace USPPNet {
             var bytes = new byte[GetSizeFromType(arrayType, input, true) - 1];
 
             bytes[0] = (byte)((int)arrayType & 0xFF);
-            Array.Copy(SerializeUInt16((UInt16)input.Length), 0, bytes, 1, 2);
+            Array.Copy(SerializeUInt16((ushort)input.Length), 0, bytes, 1, 2);
 
             var byteIndex = 5;
             if (arrayType == SerializedTypes.String) // handle strings separately
@@ -1067,7 +1075,7 @@ namespace USPPNet {
 
                 var newByteArray = new byte[byteIndex];
                 Array.Copy(bytes, 0, newByteArray, 0, byteIndex);
-                Array.Copy(SerializeUInt16((UInt16)byteIndex), 0, newByteArray, 3, 2);
+                Array.Copy(SerializeUInt16((ushort)byteIndex), 0, newByteArray, 3, 2);
                 return newByteArray;
             }
 
@@ -1077,7 +1085,7 @@ namespace USPPNet {
                 byteIndex += typeSize;
             }
 
-            Array.Copy(SerializeUInt16((UInt16)byteIndex), 0, bytes, 3, 2);
+            Array.Copy(SerializeUInt16((ushort)byteIndex), 0, bytes, 3, 2);
             return bytes;
         }
 
