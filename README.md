@@ -16,26 +16,27 @@
 You must have all of this somewhere in your UdonSharpBehaviour class.
 It's recommened to have the functions and comments in this order to prevent pain when debugging your code.
 ```csharp
-// you must have these includes in any script that uses USPPNet
+// you must include USPPNet in any script that uses USPPNet
 using USPPNet;
-using System;
 
 /// Before class ↑
 
 /// Inside class ↓
 
 // Comments that start with USPPNet are important, you need them for USPPNet to work
-
-public override void OnDeserialization()
-{
-    // Your code here
+public override void OnDeserialization() {
     // USPPNet OnDeserialization
+    // Your code here
+}
+
+public override void OnPreSerialization() {
+    // USPPNet OnPreSerialization
+    // your code here
 }
     
-public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
-{
-    // Your code here
+public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result) {
     // USPPNet OnPostSerialization
+    // Your code here
 }
 
 // USPPNet Init
@@ -53,21 +54,13 @@ void USPPNET_Ping() {
 // Only the network owner of the object will be able to call USPPNet functions
 
 USPPNET_Ping(); // The PreProcessor will parse this and turn it into a USPPNet remote function call
-// So "USPPNET_Ping();" will become USPPNet_RPC("USPPNET_Ping");
+// So "USPPNET_Ping();" will become USPPNet_RPC("Ping");
 // But that isn't really something you have to think about since it all happens in the background
 
-// If you're using manual sync mode (which i recommend) you'll need to call RequestSerialization before the function call happens
-// You can also batch up multiple different and multiple of the same calls into one RequestSerialization to save bandwidth
+// If you're using manual sync mode (which i recommend) you'll need to call RequestSerialization before the function call will sync
 ```
 ### Calling functions with parameters!
 ```csharp
-// You need to add defines for which parameter types your are going to use
-// This is a bandwidth saving compromise. Please only specify the ones you need
-// #defines must always be at the top of your script before any "using" keywords
-// Might be automated in the future* 
-#define USPPNet_int
-#define USPPNet_string
-
 // Create your function like normal
 void USPPNET_Ping(string message, float time) {
     // Do something
@@ -81,60 +74,58 @@ private void Start() {
 
 ## Temp Example
 ```csharp
-// you need to specify what parameter types you are going to use you do this by adding a define like so #define USPPNet_[TYPE] replacing [TYPE] with I.E string, float, or etc
-#define USPPNet_int
-#define USPPNet_string
-
-// You must have these two
-using USPPNet;
-using System;
+using USPPNet; // You must include USPPNet or it'll fail to compile
 
 using UdonSharp;
-using UnityEngine;
 using VRC.SDKBase;
+using VRC.Udon.Common;
 
-[UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-public class Cube : UdonSharpBehaviour
-{   
-    private void USPPNET_Test(string msg, int test) // Demo method
-    {
-        Debug.Log($"Triggered! {msg}, num: {test}");
+
+namespace USPPNet.Examples {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    public class Cube : UdonSharpBehaviour {
+        private void USPPNET_Test(string msg, int test, VRCPlayerApi caller, int[] testArray) // Demo method
+        {
+            Debug.Log($"Triggered! {msg}, num: {test}, caller: ({caller.displayName}, {caller.playerId}), DebugArray: {testArray[0]}, {testArray[1]}, {testArray[2]}");
+        }
+
+        public override void Interact() {
+            if (!Networking.IsOwner(gameObject))
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+
+            USPPNET_Test("Hello there!",69, Networking.LocalPlayer, new []{ 1, 2 ,3 }); // only the owner of the object can send RPC calls, this method gets called on everyone but the caller
+            RequestSerialization(); // if you're using manual (i recommend you do) you need to call RequestSerialization to send the RPC
+        }
+
+        // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
+        public override void OnDeserialization() {
+            // USPPNet OnDeserialization
+            
+            // your code here
+        }
+
+        public override void OnPostSerialization(SerializationResult result) {
+            // USPPNet OnPostSerialization
+            
+            // your code here
+        }
+        
+        public override void OnPreSerialization() {
+            // USPPNet OnPreSerialization
+            
+            // your code here
+        }
+
+        // USPPNet Init
     }
-
-    public override void Interact()
-    {
-        if (!Networking.IsOwner(gameObject))
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-
-        USPPNET_Test("Hello there!", 69); // only the owner of the object can send RPC calls, this method gets called on everyone but the caller
-        RequestSerialization(); // if you're using manual (i recommend you do) you need to call RequestSerialization to send the RPC
-    }
-
-    // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
-    public override void OnDeserialization()
-    {
-        // Always put your own code above the USPPNet comments, otherwise debugging will get hard
-        // USPPNet OnDeserialization
-    }
-    
-    public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result)
-    {
-        // You'd also want OnDeserialization to be before OnPostSerialization, for the same reason
-        // USPPNet OnPostSerialization
-    }
-
-    // USPPNet Init
 }
+
 ```
 
 # Known Issues
-1. Arrays are not supported.
-2. Serialization will fail if you try to pass a null argument into function.
-3. Not all value types are supported.
-4. Network usage is relatively high ~132 Bytes(increases with more "USPPNet_[TYPE]" defines) for one call, it's not linear so two calls at once would take ~152 bytes(for both). Theses are the results from the demo.
-5. Trying to call USPPNET_[FUNC NAME] on an gameObject/Component other than itself will not be networked, and get called on the local client instead.
-6. Using function overloads will cause USPPNet to crash
+1. Serialization doesn't support nested arrays.
+2. Trying to call USPPNET_[FUNC NAME] on a Component other than itself will not be networked, and get called on the local client instead.
+3. Using function overloads will cause USPPNet to crash
 
 # The TODO list
-Make Arrays work \
-Serialize unsupported types to string 
+fix calling USPPNET functions on other components

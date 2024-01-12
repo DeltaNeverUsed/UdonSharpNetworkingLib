@@ -15,267 +15,86 @@ namespace USPPNet {
     public static class PreProcessorSnippits {
         #region Init
 
-        public static string USPPNetInit = @"
-    public int bytesSent;
-    private byte USPPNet_updateIndexLast = 0;
-    // USPPNet TEMP REPLACE MethodIndex
-    [UdonSynced] private byte USPPNet_updateIndex = 0;
-    [UdonSynced] private byte[] USPPNet_methods = Array.Empty<byte>();  
+        public const string USPPNetInit = @"
+        public int bytesSent;
+        private object[] USPPNet_toBeSerialized = System.Array.Empty<object>();
+        private byte USPPNet_calls = 0;
+        private byte USPPNet_updateIndexLast = 0;
+        // USPPNet TEMP REPLACE MethodIndex
+        [UdonSynced] private byte USPPNet_updateIndex = 0;
+        [UdonSynced] private byte[] USPPNet_bytes = System.Array.Empty<byte>();
 
-#if USPPNet_byte
-    [UdonSynced] private byte[] USPPNet_args_byte = Array.Empty<byte>();
-#endif
-#if USPPNet_int
-    [UdonSynced] private int[] USPPNet_args_int = Array.Empty<int>();
-#endif
-#if USPPNet_string
-    [UdonSynced] private string[] USPPNet_args_string = Array.Empty<string>();
-#endif
-#if USPPNet_bool
-    [UdonSynced] private bool[] USPPNet_args_bool = Array.Empty<bool>();
-#endif
-#if USPPNet_short
-    [UdonSynced] private short[] USPPNet_args_short = Array.Empty<short>();
-#endif
-#if USPPNet_uint
-    [UdonSynced] private uint[] USPPNet_args_uint = Array.Empty<uint>();
-#endif
-#if USPPNet_long
-    [UdonSynced] private long[] USPPNet_args_long = Array.Empty<long>();
-#endif
-#if USPPNet_ulong
-    [UdonSynced] private ulong[] USPPNet_args_ulong = Array.Empty<ulong>();
-#endif
-#if USPPNet_float
-    [UdonSynced] private float[] USPPNet_args_float = Array.Empty<float>();
-#endif
-#if USPPNet_double
-    [UdonSynced] private double[] USPPNet_args_double = Array.Empty<double>();
-#endif
-#if USPPNet_Vector2
-    [UdonSynced] private Vector2[] USPPNet_args_Vector2 = Array.Empty<Vector2>();
-#endif
-#if USPPNet_Vector3
-    [UdonSynced] private Vector3[] USPPNet_args_Vector3 = Array.Empty<Vector3>();
-#endif
-#if USPPNet_Vector4
-    [UdonSynced] private Vector4[] USPPNet_args_Vector4 = Array.Empty<Vector4>();
-#endif
-#if USPPNet_Quaternion
-    [UdonSynced] private Quaternion[] USPPNet_args_Quaternion = Array.Empty<Quaternion>();
-#endif
-#if USPPNet_VRCUrl
-    [UdonSynced] private VRCUrl[] USPPNet_args_VRCUrl = Array.Empty<VRCUrl>();
-#endif
-#if USPPNet_Color
-    [UdonSynced] private Color[] USPPNet_args_Color = Array.Empty<Color>();
-#endif
-    
-    private byte[] USPPNet_args_byte_empty = Array.Empty<byte>();
-    private int[] USPPNet_args_int_empty = Array.Empty<int>();
-    private string[] USPPNet_args_string_empty = Array.Empty<string>();
-    private bool[] USPPNet_args_bool_empty = Array.Empty<bool>();
-    private short[] USPPNet_args_short_empty = Array.Empty<short>();
-    private uint[] USPPNet_args_uint_empty = Array.Empty<uint>();
-    private long[] USPPNet_args_long_empty = Array.Empty<long>();
-    private ulong[] USPPNet_args_ulong_empty = Array.Empty<ulong>();
-    private float[] USPPNet_args_float_empty = Array.Empty<float>();
-    private double[] USPPNet_args_double_empty = Array.Empty<double>();
-    private Vector2[] USPPNet_args_Vector2_empty = Array.Empty<Vector2>();
-    private Vector3[] USPPNet_args_Vector3_empty = Array.Empty<Vector3>();
-    private Vector4[] USPPNet_args_Vector4_empty = Array.Empty<Vector4>();
-    private Quaternion[] USPPNet_args_Quaternion_empty = Array.Empty<Quaternion>();
-    private VRCUrl[] USPPNet_args_VRCUrl_empty = Array.Empty<VRCUrl>();
-    private Color[] USPPNet_args_Color_empty = Array.Empty<Color>();
-    
-    private byte[] USPPNet_methods_empty = Array.Empty<byte>();
-    private int[] USPPNet_args_empty = Array.Empty<int>();
-
-        private void USPPNet_RPC(string method, params object[] args)
-    {   
-        if(USPPNet_methods.Length == 0)
-        {
-            USPPNet_updateIndex = (byte)((USPPNet_updateIndex + 1) % 254);
-        }
         
-        var callIndex = USPPNet_methodNames.USPPNet_IndexOf(method);
-        if (callIndex == -1)
-        {
-            return;
+        private byte[] USPPNet_bytes_empty = System.Array.Empty<byte>();
+        private object[] USPPNet_toBeSerialized_empty = System.Array.Empty<object>();
+
+        private void USPPNet_RPC(string method, params object[] args) {   
+            if(USPPNet_toBeSerialized.Length == 0) {
+                USPPNet_toBeSerialized = USPPNet_toBeSerialized.USPPNet_AppendArray((byte)0);
+                USPPNet_updateIndexLast = USPPNet_updateIndex;
+                USPPNet_updateIndex = (byte)((USPPNet_updateIndex + 1) % 254);
+            }
+            
+            var callIndex = USPPNet_methodNames.USPPNet_IndexOf(method);
+            if (callIndex == -1) {
+                return;
+            }
+
+            USPPNet_calls++;
+            USPPNet_toBeSerialized = USPPNet_toBeSerialized.USPPNet_AppendArray((ushort)callIndex);
+            foreach (var arg in args) {
+                USPPNet_toBeSerialized = USPPNet_toBeSerialized.USPPNet_AppendArray(arg);
+            }
         }
-
-        USPPNet_methods = USPPNet_methods.USPPNet_AppendArray((byte)callIndex);
-
-        foreach (var arg in args)
-        {
-            var argType = arg.GetType();
-
-#if USPPNet_byte
-            if (argType == typeof(byte))
-                USPPNet_args_byte = USPPNet_args_byte.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_int
-            if (argType == typeof(int))
-                USPPNet_args_int = USPPNet_args_int.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_string
-            if (argType == typeof(string))
-                USPPNet_args_string = USPPNet_args_string.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_bool
-            if (argType == typeof(bool))
-                USPPNet_args_bool = USPPNet_args_bool.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_short
-            if (argType == typeof(short))
-                USPPNet_args_short = USPPNet_args_short.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_uint
-            if (argType == typeof(uint))
-                USPPNet_args_uint = USPPNet_args_uint.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_long
-            if (argType == typeof(long))
-                USPPNet_args_long = USPPNet_args_long.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_ulong
-            if (argType == typeof(ulong))
-                USPPNet_args_ulong = USPPNet_args_ulong.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_float
-            if (argType == typeof(float))
-                USPPNet_args_float = USPPNet_args_float.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_double
-            if (argType == typeof(double))
-                USPPNet_args_double = USPPNet_args_double.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_Vector2
-            if (argType == typeof(Vector2))
-                USPPNet_args_Vector2 = USPPNet_args_Vector2.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_Vector3
-            if (argType == typeof(Vector3))
-                USPPNet_args_Vector3 = USPPNet_args_Vector3.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_Vector4
-            if (argType == typeof(Vector4))
-                USPPNet_args_Vector4 = USPPNet_args_Vector4.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_Quaternion
-            if (argType == typeof(Quaternion))
-                USPPNet_args_Quaternion = USPPNet_args_Quaternion.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_VRCUrl
-            if (argType == typeof(VRCUrl))
-                USPPNet_args_VRCUrl = USPPNet_args_VRCUrl.USPPNet_AppendArray(arg);
-#endif
-#if USPPNet_Color
-            if (argType == typeof(Color))
-                USPPNet_args_Color = USPPNet_args_Color.USPPNet_AppendArray(arg);
-#endif
-        }
-    }
 ";
+
+        #endregion
+
+        #region OnPreSerialization
+
+        public static string USPPNetOnPreSerialization = @"
+            if (USPPNet_updateIndexLast != USPPNet_updateIndex) {
+                USPPNet_toBeSerialized[0] = USPPNet_calls;
+                USPPNet_bytes = Serializer.Serialize(USPPNet_toBeSerialized);
+                USPPNet_toBeSerialized = USPPNet_toBeSerialized_empty;
+                USPPNet_calls = 0;
+            }";
 
         #endregion
 
         #region OnPostSerialization
 
-        public static string USPPNetOnPostSerialization = @"if (result.success)
-        {
-            bytesSent = result.byteCount;
-    USPPNet_methods = USPPNet_methods_empty; 
-            
-#if USPPNet_byte
-            USPPNet_args_byte = USPPNet_args_byte_empty;
-#endif
-#if USPPNet_int
-            USPPNet_args_int = USPPNet_args_int_empty;
-#endif
-#if USPPNet_string
-            USPPNet_args_string = USPPNet_args_string_empty;
-#endif
-#if USPPNet_bool
-            USPPNet_args_bool = USPPNet_args_bool_empty;
-#endif
-#if USPPNet_short
-            USPPNet_args_short = USPPNet_args_short_empty;
-#endif
-#if USPPNet_uint
-            USPPNet_args_uint = USPPNet_args_uint_empty;
-#endif
-#if USPPNet_long
-            USPPNet_args_long = USPPNet_args_long_empty;
-#endif
-#if USPPNet_ulong
-            USPPNet_args_ulong = USPPNet_args_ulong_empty;
-#endif
-#if USPPNet_float
-            USPPNet_args_float = USPPNet_args_float_empty;
-#endif
-#if USPPNet_double
-            USPPNet_args_double = USPPNet_args_double_empty;
-#endif
-#if USPPNet_Vector2
-            USPPNet_args_Vector2 = USPPNet_args_Vector2_empty;
-#endif
-#if USPPNet_Vector3
-            USPPNet_args_Vector3 = USPPNet_args_Vector3_empty;
-#endif
-#if USPPNet_Vector4
-            USPPNet_args_Vector4 = USPPNet_args_Vector4_empty;
-#endif
-#if USPPNet_Quaternion
-            USPPNet_args_Quaternion = USPPNet_args_Quaternion_empty;
-#endif
-#if USPPNet_VRCUrl
-            USPPNet_args_VRCUrl = USPPNet_args_VRCUrl_empty;
-#endif
-#if USPPNet_Color
-            USPPNet_args_Color = USPPNet_args_Color_empty;
-#endif
-}";
+        public const string USPPNetOnPostSerialization = @"
+            if (result.success) {
+                bytesSent = result.byteCount;
+                USPPNet_bytes = USPPNet_bytes_empty;
+            }";
 
         #endregion
 
         #region OnDeserialization
 
         public static string USPPNetOnDeserialization = @"
-        int USPPNet_args_byte_offset = 0;
-        int USPPNet_args_int_offset = 0;
-        int USPPNet_args_string_offset = 0;
-        int USPPNet_args_bool_offset = 0;
-        int USPPNet_args_short_offset = 0;
-        int USPPNet_args_uint_offset = 0;
-        int USPPNet_args_long_offset = 0;
-        int USPPNet_args_ulong_offset = 0;
-        int USPPNet_args_float_offset = 0;
-        int USPPNet_args_double_offset = 0;
-        int USPPNet_args_Vector2_offset = 0;
-        int USPPNet_args_Vector3_offset = 0;
-        int USPPNet_args_Vector4_offset = 0;
-        int USPPNet_args_Quaternion_offset = 0;
-        int USPPNet_args_VRCUrl_offset = 0;
-        int USPPNet_args_Color_offset = 0;
-        
-        if (USPPNet_updateIndexLast != USPPNet_updateIndex)
-        {
-            for (var call = 0; call < USPPNet_methods.Length; call++)
-            {
-                var method = USPPNet_methods[call];
+            if (USPPNet_updateIndexLast != USPPNet_updateIndex) {
+                
+                int USPPNet_offset = 1;
+                var desil = Serializer.Deserialize(USPPNet_bytes);
+                var calls = (int)desil[0];
+                
+                for (var call = 0; call < calls; call++) {
+                    var method = (ushort)desil[USPPNet_offset];
+                    USPPNet_offset++;
 
-                // USPPNet TEMP REPLACE ME!!!
-            }
-        }
-
-        USPPNet_updateIndexLast = USPPNet_updateIndex;";
+                    // USPPNet TEMP REPLACE ME!!!
+                }
+                USPPNet_updateIndexLast = USPPNet_updateIndex;
+            }";
 
         #endregion
     }
 
     public static class PreProcessor {
-        private static string RemoveNewLines(string code) => code.Replace('\n', ' ');
+        private static string RemoveNewLines(string code) => code.Replace('\n', ' ').Replace('\r', ' ');
 
         private static string StripComments(string code) {
             var re = @"(@(?:""[^""]*"")+|""(?:[^""\n\\]+|\\.)*""|'(?:[^'\n\\]+|\\.)*')|//.*|/\*(?s:.*?)\*/";
@@ -365,66 +184,25 @@ namespace USPPNet {
 
             foreach (var func in functionNames) {
                 var tempArgs = "";
-                var argindex = new Dictionary<string, int>();
+                var offset = 0;
                 for (var index = 0; index < functions[func].Length; index++) {
                     var argType = functions[func][index];
                     if (index > 0)
                         tempArgs += ", ";
 
-                    int offset;
-                    if (!argindex.ContainsKey(argType)) {
-                        offset = 0;
-                        argindex.Add(argType, 1);
-                    }
-                    else {
-                        offset = argindex[argType];
-                        argindex[argType]++;
-                    }
-
                     if (offset > 0)
-                        tempArgs += $"USPPNet_args_{argType}[USPPNet_args_{argType}_offset + {offset}]";
+                        tempArgs += $"({argType})desil[USPPNet_offset + {offset}]";
                     else
-                        tempArgs += $"USPPNet_args_{argType}[USPPNet_args_{argType}_offset]";
+                        tempArgs += $"({argType})desil[USPPNet_offset]";
+                    offset++;
                 }
 
                 sb.Append($@"
                 if(method == {functions.Keys.ToArray().USPPNet_IndexOf(func)}) " + "{" + $@"
                     {func}({tempArgs});");
 
-                int count;
+                sb.Append($"USPPNet_offset += {offset};");
 
-                if ((count = functions[func].Count(s => s == "byte")) > 0)
-                    sb.Append($"USPPNet_args_byte_offset += {count};");
-                if ((count = functions[func].Count(s => s == "int")) > 0)
-                    sb.Append($"USPPNet_args_int_offset += {count};");
-                if ((count = functions[func].Count(s => s == "string")) > 0)
-                    sb.Append($"USPPNet_args_string_offset += {count};");
-                if ((count = functions[func].Count(s => s == "bool")) > 0)
-                    sb.Append($"USPPNet_args_bool_offset += {count};");
-                if ((count = functions[func].Count(s => s == "short")) > 0)
-                    sb.Append($"USPPNet_args_short_offset += {count};");
-                if ((count = functions[func].Count(s => s == "uint")) > 0)
-                    sb.Append($"USPPNet_args_uint_offset += {count};");
-                if ((count = functions[func].Count(s => s == "long")) > 0)
-                    sb.Append($"USPPNet_args_long_offset += {count};");
-                if ((count = functions[func].Count(s => s == "ulong")) > 0)
-                    sb.Append($"USPPNet_args_ulong_offset += {count};");
-                if ((count = functions[func].Count(s => s == "float")) > 0)
-                    sb.Append($"USPPNet_args_float_offset += {count};");
-                if ((count = functions[func].Count(s => s == "double")) > 0)
-                    sb.Append($"USPPNet_args_double_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Vector2")) > 0)
-                    sb.Append($"USPPNet_args_Vector2_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Vector3")) > 0)
-                    sb.Append($"USPPNet_args_Vector3_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Vector4")) > 0)
-                    sb.Append($"USPPNet_args_Vector4_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Quaternion")) > 0)
-                    sb.Append($"USPPNet_args_Quaternion_offset += {count};");
-                if ((count = functions[func].Count(s => s == "VRCUrl")) > 0)
-                    sb.Append($"USPPNet_args_VRCUrl_offset += {count};");
-                if ((count = functions[func].Count(s => s == "Color")) > 0)
-                    sb.Append($"USPPNet_args_Color_offset += {count};");
                 sb.Append("continue;");
                 sb.Append("}\n");
             }
@@ -442,11 +220,13 @@ namespace USPPNet {
             //Debug.Log("Goobed:"+methcall);
 
             for (var i = 0; i < lines.Length; i++) {
-                lines[i] = lines[i].Replace("// USPPNet Init", PreProcessorSnippits.USPPNetInit);
+                lines[i] = lines[i].Replace("// USPPNet Init", RemoveNewLines(PreProcessorSnippits.USPPNetInit));
+                lines[i] = lines[i].Replace("// USPPNet OnPreSerialization",
+                    RemoveNewLines(PreProcessorSnippits.USPPNetOnPreSerialization));
                 lines[i] = lines[i].Replace("// USPPNet OnPostSerialization",
-                    PreProcessorSnippits.USPPNetOnPostSerialization);
+                    RemoveNewLines(PreProcessorSnippits.USPPNetOnPostSerialization));
                 lines[i] = lines[i].Replace("// USPPNet OnDeserialization",
-                    RemoveNewLines(PreProcessorSnippits.USPPNetOnDeserialization));
+                    RemoveNewLines(RemoveNewLines(PreProcessorSnippits.USPPNetOnDeserialization)));
                 lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE ME!!!", methcall);
                 lines[i] = lines[i].Replace("// USPPNet TEMP REPLACE MethodIndex",
                     "private string[] USPPNet_methodNames = { " + callIndex + " };");

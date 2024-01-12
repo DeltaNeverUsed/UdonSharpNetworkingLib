@@ -1,41 +1,47 @@
-﻿// you need to specify what parameter types you are going to use you do this by adding a define like so #define USPPNet_[TYPE] replacing [TYPE] with I.E string, float, or etc
-
-#define USPPNet_int
-#define USPPNet_string
-
-// You must have these two
+﻿using USPPNet; // You must include USPPNet or it'll fail to compile
 
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon.Common;
 
-[UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-public class Cube : UdonSharpBehaviour {
-    private void USPPNET_Test(string msg, int test) // Demo method
-    {
-        Debug.Log($"Triggered! {msg}, num: {test}");
+
+namespace USPPNet.Examples {
+    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    public class Cube : UdonSharpBehaviour {
+        private void USPPNET_Test(string msg, int test, VRCPlayerApi caller, int[] testArray) // Demo method
+        {
+            Debug.Log($"Triggered! {msg}, num: {test}, caller: ({caller.displayName}, {caller.playerId}), DebugArray: {testArray[0]}, {testArray[1]}, {testArray[2]}");
+        }
+
+        public override void Interact() {
+            if (!Networking.IsOwner(gameObject))
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+
+            USPPNET_Test("Hello there!",69, Networking.LocalPlayer, new []{ 1, 2 ,3 }); // only the owner of the object can send RPC calls, this method gets called on everyone but the caller
+            RequestSerialization(); // if you're using manual (i recommend you do) you need to call RequestSerialization to send the RPC
+        }
+
+        // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
+        public override void OnDeserialization() {
+            // USPPNet OnDeserialization
+            
+            // your code here
+        }
+
+        public override void OnPostSerialization(SerializationResult result) {
+            // USPPNet OnPostSerialization
+            
+            // your code here
+            Debug.Log(GetProgramVariable("bytesSent"));
+        }
+        
+        public override void OnPreSerialization() {
+            // USPPNet OnPreSerialization
+            
+            // your code here
+        }
+
+        // USPPNet Init
     }
-
-    public override void Interact() {
-        if (!Networking.IsOwner(gameObject))
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-
-        USPPNET_Test("Hello there!",
-            69); // only the owner of the object can send RPC calls, this method gets called on everyone but the caller
-        RequestSerialization(); // if you're using manual (i recommend you do) you need to call RequestSerialization to send the RPC
-    }
-
-    // Comments that start with USPPNet are important for it to work, don't remove these, or the PreProcessor won't be able to generate the code
-    public override void OnDeserialization() {
-        // Always put your own code above the USPPNet comments, otherwise debugging will get hard
-        // USPPNet OnDeserialization
-    }
-
-    public override void OnPostSerialization(SerializationResult result) {
-        // You'd also want OnDeserialization to be before OnPostSerialization, for the same reason
-        // USPPNet OnPostSerialization
-    }
-
-    // USPPNet Init
 }
