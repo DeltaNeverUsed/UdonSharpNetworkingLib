@@ -204,6 +204,12 @@
         "com.unity.inputsystem": "1.2.0"
       }
     },
+    "deltaneverused.usppnet": {
+      "version": "file:deltaneverused.usppnet",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "deltaneverused.uspppatcher": {
       "version": "file:deltaneverused.uspppatcher",
       "depth": 0,

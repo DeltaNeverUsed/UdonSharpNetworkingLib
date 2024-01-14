@@ -5,8 +5,8 @@
   "description": "Networking library",
   "gitDependencies": {},
   "vpmDependencies": {
-	"deltaneverused.uspppatcher": "0.0.1",
-    "com.vrchat.worlds": "3.5.0",
+    "deltaneverused.uspppatcher": "0.0.1",
+    "com.vrchat.worlds": "3.5.0"
   },
   "author": {
     "name": "DeltaNeverUsed",
