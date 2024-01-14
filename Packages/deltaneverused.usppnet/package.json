@@ -5,8 +5,8 @@
   "description": "Networking library",
   "gitDependencies": {},
   "vpmDependencies": {
+	"deltaneverused.uspppatcher": "0.0.1",
     "com.vrchat.worlds": "3.5.0",
-	"deltaneverused.uspppatcher": "0.0.1"
   },
   "author": {
     "name": "DeltaNeverUsed",
@@ -14,6 +14,5 @@
   },
   "legacyFolders": {},
   "legacyFiles": {},
-  "localPath": "D:\\GiteaRepos\\Unity\\Listings\\USPPNet\\Packages\\deltaneverused.usppnet",
   "unity": "2022.3"
 }
