@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase;
 using Debug = UnityEngine.Debug;

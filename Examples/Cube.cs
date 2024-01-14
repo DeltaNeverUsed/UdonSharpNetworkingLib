@@ -1,6 +1,4 @@
-﻿using USPPNet; // You must include USPPNet or it'll fail to compile
-
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon.Common;
@@ -8,7 +6,7 @@ using VRC.Udon.Common;
 
 namespace USPPNet.Examples {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class Cube : UdonSharpBehaviour {
+    public class Cube : USPPNetUdonSharpBehaviour {
         private void USPPNET_Test(string msg, int test, VRCPlayerApi caller, int[] testArray) // Demo method
         {
             Debug.Log($"Triggered! {msg}, num: {test}, caller: ({caller.displayName}, {caller.playerId}), DebugArray: {testArray[0]}, {testArray[1]}, {testArray[2]}");
@@ -33,7 +31,7 @@ namespace USPPNet.Examples {
             // USPPNet OnPostSerialization
             
             // your code here
-            Debug.Log(GetProgramVariable("bytesSent"));
+            Debug.Log(bytesSent);
         }
         
         public override void OnPreSerialization() {

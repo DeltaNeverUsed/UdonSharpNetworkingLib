@@ -16,36 +16,34 @@
 You must have all of this somewhere in your UdonSharpBehaviour class.
 It's recommened to have the functions and comments in this order to prevent pain when debugging your code.
 ```csharp
-// you must include USPPNet in any script that uses USPPNet
-using USPPNet;
-
-/// Before class ↑
-
-/// Inside class ↓
-
-// Comments that start with USPPNet are important, you need them for USPPNet to work
-public override void OnDeserialization() {
-    // USPPNet OnDeserialization
-    // Your code here
+// you must inheret your class from USPPNetUdonSharpBehaviour
+public class USPPNetTest : USPPNetUdonSharpBehaviour { 
+    // Comments that start with USPPNet are important, you need them for USPPNet to work
+   public override void OnDeserialization() {
+       // USPPNet OnDeserialization
+       // Your code here
+   }
+   
+   public override void OnPreSerialization() {
+       // USPPNet OnPreSerialization
+       // your code here
+   }
+       
+   public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result) {
+       // USPPNet OnPostSerialization
+       // Your code here
+   }
+   
+   // USPPNet Init
 }
 
-public override void OnPreSerialization() {
-    // USPPNet OnPreSerialization
-    // your code here
-}
-    
-public override void OnPostSerialization(VRC.Udon.Common.SerializationResult result) {
-    // USPPNet OnPostSerialization
-    // Your code here
-}
 
-// USPPNet Init
 ```
 ### Creating functions
 ```csharp
 // To define a networked function
 // You simply put USPPNET_ before the name of any function to make it a USPPNet function
-void USPPNET_Ping() {
+public void USPPNET_Ping() {
     // Do something
 }
 ```
@@ -57,18 +55,26 @@ USPPNET_Ping(); // The PreProcessor will parse this and turn it into a USPPNet r
 // So "USPPNET_Ping();" will become USPPNet_RPC("Ping");
 // But that isn't really something you have to think about since it all happens in the background
 
+// If you want to call the function on another component you'd need to do this instead.
+var component = GetComponent<your component>();
+component.USPPNet_RPC(nameof(component.USPPNET_Ping));
+
 // If you're using manual sync mode (which i recommend) you'll need to call RequestSerialization before the function call will sync
 ```
 ### Calling functions with parameters!
 ```csharp
 // Create your function like normal
-void USPPNET_Ping(string message, float time) {
+public void USPPNET_Ping(string message, float time) {
     // Do something
 }
 
 private void Start() {
     // And call it like normal
     USPPNET_Ping("Hello there!", 420);
+    
+    // If you want to call the function on another component you'd need to do this instead.
+   var component = GetComponent<your component>();
+   component.USPPNet_RPC(nameof(component.USPPNET_Ping), "Hello there!", 420);
 }
 ```
 
@@ -83,7 +89,7 @@ using VRC.Udon.Common;
 
 namespace USPPNet.Examples {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class Cube : UdonSharpBehaviour {
+    public class Cube : USPPNetUdonSharpBehaviour {
         private void USPPNET_Test(string msg, int test, VRCPlayerApi caller, int[] testArray) // Demo method
         {
             Debug.Log($"Triggered! {msg}, num: {test}, caller: ({caller.displayName}, {caller.playerId}), DebugArray: {testArray[0]}, {testArray[1]}, {testArray[2]}");
@@ -108,6 +114,7 @@ namespace USPPNet.Examples {
             // USPPNet OnPostSerialization
             
             // your code here
+            Debug.Log(bytesSent);
         }
         
         public override void OnPreSerialization() {
@@ -124,7 +131,7 @@ namespace USPPNet.Examples {
 
 # Known Issues
 1. Serialization doesn't support nested arrays.
-2. Trying to call USPPNET_[FUNC NAME] on a Component other than itself will not be networked, and get called on the local client instead.
+2. Trying to call USPPNET_[FUNC NAME] on a Component other than itself will not be networked, and get called on the local client instead. you can use USPPNet_RPC(nameof(function), param1, param2, ...); instead to call those functions remotely
 3. Using function overloads will cause USPPNet to crash
 
 # The TODO list

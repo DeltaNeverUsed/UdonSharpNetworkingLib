@@ -16,7 +16,6 @@ namespace USPPNet {
         #region Init
 
         public const string USPPNetInit = @"
-        public int bytesSent;
         private object[] USPPNet_toBeSerialized = System.Array.Empty<object>();
         private byte USPPNet_calls = 0;
         private byte USPPNet_updateIndexLast = 0;
@@ -28,7 +27,7 @@ namespace USPPNet {
         private byte[] USPPNet_bytes_empty = System.Array.Empty<byte>();
         private object[] USPPNet_toBeSerialized_empty = System.Array.Empty<object>();
 
-        private void USPPNet_RPC(string method, params object[] args) {   
+        public override void USPPNet_RPC(string method, params object[] args) {   
             if(USPPNet_toBeSerialized.Length == 0) {
                 USPPNet_toBeSerialized = USPPNet_toBeSerialized.USPPNet_AppendArray((byte)0);
                 USPPNet_updateIndexLast = USPPNet_updateIndex;
@@ -151,7 +150,7 @@ namespace USPPNet {
                 var line = lines[index];
                 lineNum++;
                 var l = StripComments(line);
-                if (!functionNames.Any(c => l.Contains(c)))
+                if (!functionNames.Any(c => l.TrimStart().StartsWith(c)))
                     continue;
                 if (!l.Contains(");"))
                     continue;
@@ -211,7 +210,7 @@ namespace USPPNet {
         }
 
         private static bool Uses_USPPNet(ref string prog) =>
-            prog.Contains("using USPPNet;") && prog.Contains("// USPPNet Init");
+            prog.Contains("USPPNetUdonSharpBehaviour") && prog.Contains("// USPPNet OnPreSerialization") && prog.Contains("// USPPNet OnPostSerialization") && prog.Contains("// USPPNet OnDeserialization");
 
         private static string[] replace_Placeholder_Comments(this string[] lines,
                                                              ref Dictionary<string, string[]> functions) {
