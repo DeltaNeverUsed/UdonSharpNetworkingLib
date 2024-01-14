@@ -3,12 +3,10 @@
   "displayName": "USPPNet",
   "version": "0.0.1",
   "description": "Networking library",
-  "dependencies": {
-    "deltaneverused.uspppatcher": "0.0.1"
-  },
   "gitDependencies": {},
   "vpmDependencies": {
     "com.vrchat.worlds": "3.5.0"
+	"deltaneverused.uspppatcher": "0.0.1"
   },
   "author": {
     "name": "DeltaNeverUsed",
