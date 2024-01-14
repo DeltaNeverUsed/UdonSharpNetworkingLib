@@ -2,7 +2,7 @@
   "name": "deltaneverused.usppnet",
   "displayName": "USPPNet",
   "version": "0.0.1",
-  "description": "Describe this Package",
+  "description": "Networking library",
   "dependencies": {
     "deltaneverused.uspppatcher": "0.0.1"
   },
@@ -16,5 +16,6 @@
   },
   "legacyFolders": {},
   "legacyFiles": {},
-  "localPath": "D:\\GiteaRepos\\Unity\\Listings\\USPPNet\\Packages\\deltaneverused.usppnet"
+  "localPath": "D:\\GiteaRepos\\Unity\\Listings\\USPPNet\\Packages\\deltaneverused.usppnet",
+  "unity": "2022.3"
 }
