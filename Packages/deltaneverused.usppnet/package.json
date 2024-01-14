@@ -1,0 +1,20 @@
+{
+  "name": "deltaneverused.usppnet",
+  "displayName": "USPPNet",
+  "version": "0.0.1",
+  "description": "Describe this Package",
+  "dependencies": {
+    "deltaneverused.uspppatcher": "0.0.1"
+  },
+  "gitDependencies": {},
+  "vpmDependencies": {
+    "com.vrchat.worlds": "3.5.0"
+  },
+  "author": {
+    "name": "DeltaNeverUsed",
+    "email": "sinus06@hotmail.com"
+  },
+  "legacyFolders": {},
+  "legacyFiles": {},
+  "localPath": "D:\\GiteaRepos\\Unity\\Listings\\USPPNet\\Packages\\deltaneverused.usppnet"
+}

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: Cube
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 3600883b7e5e0e64c86554d9a1dea92c,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 6fe5cbc0ce7984d4d9237b47b943bd22,
     type: 2}
   udonAssembly: 
   assemblyError: 
