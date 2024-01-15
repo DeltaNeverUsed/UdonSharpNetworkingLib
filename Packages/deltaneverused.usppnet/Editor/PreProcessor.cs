@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using USPPPatcher;
+using UnityEngine;
 
 namespace USPPNet {
     public class PreProcessorInstance {
@@ -114,23 +115,30 @@ namespace USPPNet {
                 var start = l.IndexOf("void USPPNET_", StringComparison.Ordinal);
                 if (start == -1) // check if line is USPPNET function
                     continue;
-
+                
                 var argsStart = l.IndexOf("(", start + 5, StringComparison.Ordinal) + 1;
                 var argsEnd = l.IndexOf(")", argsStart, StringComparison.Ordinal);
 
-                var argsSubstring = l.Substring(argsStart, argsEnd - argsStart);
+                var functionName = l.Substring(start + 5, argsStart - (start + 6));
+                
+                var argLength = argsEnd - argsStart;
+                if (argLength < 2) {
+                    functions.Add(functionName, Array.Empty<string>());
+                    continue;
+                }
 
+                var argsSubstring = l.Substring(argsStart, argLength);
                 var args = argsSubstring.Split(',');
+                
                 var functionArgs = new string[args.Length];
+            
                 for (var index = 0; index < args.Length; index++) // adds function argument types to dict
                 {
                     var split = args[index].Split(' ');
                     split = split.Where(x => !string.IsNullOrEmpty(x)).ToArray(); // remove blank strings
                     functionArgs[index] = split[0];
                 }
-
-                var functionName = l.Substring(start + 5, argsStart - (start + 6));
-
+                
                 //Debug.Log($"Function: {functionName}, arg types: {ObjectDumper.Dump(functionArgs)}");
 
                 functions.Add(functionName, functionArgs);
@@ -155,7 +163,6 @@ namespace USPPNet {
                 if (!l.Contains(");"))
                     continue;
 
-
                 var namestart = l.IndexOf("USPPNET_", StringComparison.Ordinal);
                 var nameEnd = l.IndexOf("(", namestart, StringComparison.Ordinal);
                 var functionEnd = l.IndexOf(";", nameEnd, StringComparison.Ordinal);
@@ -163,7 +170,10 @@ namespace USPPNet {
                 var functionName = l.Substring(namestart, nameEnd - namestart);
                 var function = l.Substring(namestart, nameEnd - namestart + 1);
 
-                lines[index] = l.Replace(function, $"USPPNet_RPC(\"{functionName}\", ");
+                if (functions[functionName].Length > 0)
+                    lines[index] = l.Replace(function, $"USPPNet_RPC(\"{functionName}\", ");
+                else
+                    lines[index] = l.Replace(function, $"USPPNet_RPC(\"{functionName}\"");
 
                 //Debug.Log($"Line: {lineNum}, Line: {lines[index]}");
                 //break; // remember to remove
