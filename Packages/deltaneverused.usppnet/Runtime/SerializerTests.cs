@@ -1,6 +1,4 @@
-﻿//#define LogSucc
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using UdonSharp;
 using UnityEngine;

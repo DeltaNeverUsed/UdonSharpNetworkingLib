@@ -25,8 +25,8 @@ namespace USPPNet {
         }
 
         [ItemCanBeNull]
-        public static T[] USPPNet_AppendArray<T>(this T[] array, object item) {
-            return array.USPPNet_ConcatArray(new[] { (T)item });
+        public static T[] USPPNet_AppendArray<T>(this T[] array, T item) {
+            return array.USPPNet_ConcatArray(new[] { item });
         }
 
         public static int USPPNet_IndexOf<T>(this T[] array, T needle) {
