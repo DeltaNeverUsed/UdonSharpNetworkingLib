@@ -18,7 +18,7 @@ namespace USPPNet {
 
         public const string USPPNetInit = @"
         private object[] USPPNet_toBeSerialized = System.Array.Empty<object>();
-        private byte USPPNet_calls = 0;
+        private ushort USPPNet_calls = 0;
         private byte USPPNet_updateIndexLast = 0;
         // USPPNet TEMP REPLACE MethodIndex
         [UdonSynced] private byte USPPNet_updateIndex = 0;
