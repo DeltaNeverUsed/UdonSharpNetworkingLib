@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define LogSucc
+
+using System;
 using System.Diagnostics;
 using UdonSharp;
 using UnityEngine;
@@ -55,7 +57,7 @@ namespace USPPNet {
         private static void TestSerializerBool() {
             var input = Random.value > 0.5f;
             var serialized = Serializer.SerializeBool(input);
-            var result = Serializer.DeserializeBool(serialized);
+            var result = Serializer.DeserializeBool(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerBool: Mismatch - Input: {input}, Output: {result}");
             }
@@ -69,7 +71,7 @@ namespace USPPNet {
         private static void TestSerializerByte() {
             var input = (byte)Random.Range(0, 256);
             var serialized = Serializer.SerializeByte(input);
-            var result = Serializer.DeserializeByte(serialized);
+            var result = Serializer.DeserializeByte(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerByte: Mismatch - Input: {input}, Output: {result}");
             }
@@ -83,7 +85,7 @@ namespace USPPNet {
         private static void TestSerializerSByte() {
             var input = (sbyte)Random.Range(-128, 128);
             var serialized = Serializer.SerializeSByte(input);
-            var result = Serializer.DeserializeSByte(serialized);
+            var result = Serializer.DeserializeSByte(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerSByte: Mismatch - Input: {input}, Output: {result}");
             }
@@ -97,7 +99,7 @@ namespace USPPNet {
         private static void TestSerializerInt16() {
             var input = (short)Random.Range(short.MinValue, short.MaxValue);
             var serialized = Serializer.SerializeInt16(input);
-            var result = Serializer.DeserializeInt16(serialized);
+            var result = Serializer.DeserializeInt16(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerInt16: Mismatch - Input: {input}, Output: {result}");
             }
@@ -111,7 +113,7 @@ namespace USPPNet {
         private static void TestSerializerInt32() {
             var input = Random.Range(int.MinValue, int.MaxValue);
             var serialized = Serializer.SerializeInt32(input);
-            var result = Serializer.DeserializeInt32(serialized);
+            var result = Serializer.DeserializeInt32(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerInt32: Mismatch - Input: {input}, Output: {result}");
             }
@@ -125,7 +127,7 @@ namespace USPPNet {
         private static void TestSerializerInt64() {
             long input = Random.Range(int.MinValue, int.MaxValue) * 24;
             var serialized = Serializer.SerializeInt64(input);
-            var result = Serializer.DeserializeInt64(serialized);
+            var result = Serializer.DeserializeInt64(serialized, 0);
             if (input != result) {
                 var debugString = "";
                 for (var i = 0; i < serialized.Length; i++)
@@ -142,7 +144,7 @@ namespace USPPNet {
         private static void TestSerializerUInt16() {
             var input = (ushort)Random.Range(0, ushort.MaxValue + 1);
             var serialized = Serializer.SerializeUInt16(input);
-            var result = Serializer.DeserializeUInt16(serialized);
+            var result = Serializer.DeserializeUInt16(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerUInt16: Mismatch - Input: {input}, Output: {result}");
             }
@@ -156,7 +158,7 @@ namespace USPPNet {
         private static void TestSerializerUInt32() {
             var input = (uint)Random.Range(0, int.MaxValue) + (uint)Random.Range(0, int.MaxValue);
             var serialized = Serializer.SerializeUInt32(input);
-            var result = Serializer.DeserializeUInt32(serialized);
+            var result = Serializer.DeserializeUInt32(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerUInt32: Mismatch - Input: {input}, Output: {result}");
             }
@@ -170,7 +172,7 @@ namespace USPPNet {
         private static void TestSerializerUInt64() {
             var input = (ulong)Random.Range(0, int.MaxValue) + ((ulong)Random.Range(0, int.MaxValue) << 32);
             var serialized = Serializer.SerializeUInt64(input);
-            var result = Serializer.DeserializeUInt64(serialized);
+            var result = Serializer.DeserializeUInt64(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerUInt64: Mismatch - Input: {input}, Output: {result}");
             }
@@ -184,7 +186,7 @@ namespace USPPNet {
         private static void TestSerializerSingle() {
             var input = Random.Range(float.MinValue, float.MaxValue);
             var serialized = Serializer.SerializeSingle(input);
-            var result = Serializer.DeserializeSingle(serialized);
+            var result = Serializer.DeserializeSingle(serialized, 0);
             if (!Mathf.Approximately(input, result)) {
                 Debug.Log($"Serializer.TestSerializerSingle: Mismatch - Input: {input}, Output: {result}");
             }
@@ -198,7 +200,7 @@ namespace USPPNet {
         private static void TestSerializerDouble() {
             double input = Random.Range(float.MinValue, float.MaxValue);
             var serialized = Serializer.SerializeDouble(input);
-            var result = Serializer.DeserializeDouble(serialized);
+            var result = Serializer.DeserializeDouble(serialized, 0);
             if (!Mathf.Approximately((float)input, (float)result)) {
                 Debug.Log($"Serializer.TestSerializerDouble: Mismatch - Input: {input}, Output: {result}");
             }
@@ -212,9 +214,9 @@ namespace USPPNet {
         private static void TestSerializerString() {
             var input = "Test_String_" + Random.Range(0, 100);
             var serialized = Serializer.SerializeString(input);
-            var result = Serializer.DeserializeString(serialized);
+            var result = Serializer.DeserializeString(serialized, 0);
             if (input != result) {
-                Debug.Log($"Serializer.TestSerializerString: Mismatch - Input: {input}, Output: {result}");
+                Debug.Log($"Serializer.TestSerializerString: Mismatch - Input: (\"{input}\", {input.Length}), Output: (\"{result}\", {result.Length})");
             }
             else {
 #if LogSucc
@@ -225,7 +227,7 @@ namespace USPPNet {
 
         private static void TestSerializerVRCPlayerApi() {
             var serialized = Serializer.SerializeVRCPlayerApi(Networking.LocalPlayer);
-            var result = Serializer.DeserializeVRCPlayerApi(serialized);
+            var result = Serializer.DeserializeVRCPlayerApi(serialized, 0);
             if (result == null || result.playerId != Networking.LocalPlayer.playerId) {
                 Debug.Log(
                     $"Serializer.TestSerializerVRCPlayerApi: Mismatch - Input: {Networking.LocalPlayer.playerId}, Output: {(result == null ? "Was null" : result.playerId.ToString())}");
@@ -240,7 +242,7 @@ namespace USPPNet {
         private static void TestSerializerColor() {
             var input = new Color(Random.value, Random.value, Random.value, Random.value);
             var serialized = Serializer.SerializeColor(input);
-            var result = Serializer.DeserializeColor(serialized);
+            var result = Serializer.DeserializeColor(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerColor: Mismatch - Input: {input}, Output: {result}");
             }
@@ -255,7 +257,7 @@ namespace USPPNet {
             var input = new Color32((byte)Random.Range(0, 256), (byte)Random.Range(0, 256), (byte)Random.Range(0, 256),
                 (byte)Random.Range(0, 256));
             var serialized = Serializer.SerializeColor32(input);
-            var result = Serializer.DeserializeColor32(serialized);
+            var result = Serializer.DeserializeColor32(serialized, 0);
             if (input.r != result.r || input.g != result.g || input.b != result.b || input.a != result.a) {
                 Debug.Log($"Serializer.TestSerializerColor32: Mismatch - Input: {input}, Output: {result}");
             }
@@ -269,7 +271,7 @@ namespace USPPNet {
         private static void TestSerializerVector2() {
             var input = new Vector2(Random.Range(-100f, 100f), Random.Range(-100f, 100f));
             var serialized = Serializer.SerializeVector2(input);
-            var result = Serializer.DeserializeVector2(serialized);
+            var result = Serializer.DeserializeVector2(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerVector2: Mismatch - Input: {input}, Output: {result}");
             }
@@ -283,7 +285,7 @@ namespace USPPNet {
         private static void TestSerializerVector2Int() {
             var input = new Vector2Int(Random.Range(-100, 100), Random.Range(-100, 100));
             var serialized = Serializer.SerializeVector2Int(input);
-            var result = Serializer.DeserializeVector2Int(serialized);
+            var result = Serializer.DeserializeVector2Int(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerVector2Int: Mismatch - Input: {input}, Output: {result}");
             }
@@ -297,7 +299,7 @@ namespace USPPNet {
         private static void TestSerializerVector3() {
             var input = new Vector3(Random.Range(-100f, 100f), Random.Range(-100f, 100f), Random.Range(-100f, 100f));
             var serialized = Serializer.SerializeVector3(input);
-            var result = Serializer.DeserializeVector3(serialized);
+            var result = Serializer.DeserializeVector3(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerVector3: Mismatch - Input: {input}, Output: {result}");
             }
@@ -311,7 +313,7 @@ namespace USPPNet {
         private static void TestSerializerVector3Int() {
             var input = new Vector3Int(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100));
             var serialized = Serializer.SerializeVector3Int(input);
-            var result = Serializer.DeserializeVector3Int(serialized);
+            var result = Serializer.DeserializeVector3Int(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerVector3Int: Mismatch - Input: {input}, Output: {result}");
             }
@@ -326,7 +328,7 @@ namespace USPPNet {
             var input = new Vector4(Random.Range(-100f, 100f), Random.Range(-100f, 100f), Random.Range(-100f, 100f),
                 Random.Range(-100f, 100f));
             var serialized = Serializer.SerializeVector4(input);
-            var result = Serializer.DeserializeVector4(serialized);
+            var result = Serializer.DeserializeVector4(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerVector4: Mismatch - Input: {input}, Output: {result}");
             }
@@ -340,7 +342,7 @@ namespace USPPNet {
         private static void TestSerializerQuaternion() {
             var input = new Quaternion(Random.value, Random.value, Random.value, Random.value).normalized;
             var serialized = Serializer.SerializeQuaternion(input);
-            var result = Serializer.DeserializeQuaternion(serialized);
+            var result = Serializer.DeserializeQuaternion(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerQuaternion: Mismatch - Input: {input}, Output: {result}");
             }
@@ -354,7 +356,7 @@ namespace USPPNet {
         private static void TestSerializerDateTime() {
             var input = DateTime.Now.AddSeconds(Random.Range(-100000, 100000));
             var serialized = Serializer.SerializeDateTime(input);
-            var result = Serializer.DeserializeDateTime(serialized);
+            var result = Serializer.DeserializeDateTime(serialized, 0);
             if (input != result) {
                 Debug.Log($"Serializer.TestSerializerDateTime: Mismatch - Input: {input}, Output: {result}");
             }
@@ -368,7 +370,7 @@ namespace USPPNet {
         private static void TestSerializerArray() {
             int[] inputArray = { 1, 2, 3, 4, 5 };
             var serialized = Serializer.SerializeArray(inputArray, SerializedTypes.Int32);
-            var resultArray = Serializer.DeserializeArray(serialized);
+            var resultArray = Serializer.DeserializeArray(serialized, 0);
             var result = (int[])resultArray;
 
             if (result == null || !Extensions.IsArraySame(inputArray, resultArray)) {
