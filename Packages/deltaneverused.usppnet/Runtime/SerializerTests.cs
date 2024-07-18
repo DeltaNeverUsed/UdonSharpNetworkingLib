@@ -54,7 +54,8 @@ namespace USPPNet {
                 $"Individual Tests Done! totalTime: {stop.Elapsed.TotalMilliseconds}ms, {stop.Elapsed.TotalMilliseconds / tests}ms per test");
             
             Debug.Log("Starting Tests!");
-            stop.Reset();
+            var ser = new Stopwatch();
+            var deser = new Stopwatch();
             for (var i = 0; i < tests; i++) {
                 var things = new object[] {
                     "Test string!!",
@@ -76,10 +77,12 @@ namespace USPPNet {
                     true,
                 };
                 
-                stop.Start(); // Start messuring
+                ser.Start();
                 var stuff = Serializer.Serialize(things);
-                var dethings = Serializer.Deserialize(ref stuff);
-                stop.Stop(); // Stop messuring
+                ser.Stop();
+                deser.Start();
+                var dethings = Serializer.Deserialize(stuff);
+                deser.Stop();
 
                 if (dethings.Length != things.Length) {
                     Debug.Log("things and dethings not same length");
@@ -105,7 +108,11 @@ namespace USPPNet {
             stop.Stop();
 
             Debug.Log(
-                $"Object Array Tests Done! totalTime: {stop.Elapsed.TotalMilliseconds}ms, {stop.Elapsed.TotalMilliseconds / tests}ms per test");
+                $"Object Array Tests Done! ser: {ser.Elapsed.TotalMilliseconds}ms, {ser.Elapsed.TotalMilliseconds / tests}ms per test");
+            Debug.Log(
+                $"Object Array Tests Done! deser: {deser.Elapsed.TotalMilliseconds}ms, {deser.Elapsed.TotalMilliseconds / tests}ms per test");
+            Debug.Log(
+                $"Object Array Tests Done! totalTime: {ser.Elapsed.TotalMilliseconds + deser.Elapsed.TotalMilliseconds}ms, {(ser.Elapsed.TotalMilliseconds + deser.Elapsed.TotalMilliseconds) / tests}ms per test");
         }
 
         private static void TestSerializerBool() {
