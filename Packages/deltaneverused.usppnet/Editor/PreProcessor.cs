@@ -78,7 +78,7 @@ namespace USPPNet {
             if (USPPNet_updateIndexLast != USPPNet_updateIndex) {
                 
                 int USPPNet_offset = 1;
-                var desil = Serializer.Deserialize(USPPNet_bytes);
+                var desil = Serializer.Deserialize(ref USPPNet_bytes);
                 var calls = (int)desil[0];
                 
                 for (var call = 0; call < calls; call++) {

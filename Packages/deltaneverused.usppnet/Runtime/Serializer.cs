@@ -282,52 +282,52 @@ namespace USPPNet {
 
         #region Deserialize
 
-        public static object DeserializeKnownType(byte[] bytes, SerializedTypes type, int startIndex) {
+        public static object DeserializeKnownType(ref byte[] bytes, SerializedTypes type, int startIndex) {
             switch (type) {
                 case SerializedTypes.Boolean:
-                    return DeserializeBool(bytes, startIndex);
+                    return DeserializeBool(ref bytes, startIndex);
                 case SerializedTypes.SByte:
-                    return DeserializeSByte(bytes, startIndex);
+                    return DeserializeSByte(ref bytes, startIndex);
                 case SerializedTypes.Byte:
-                    return DeserializeByte(bytes, startIndex);
+                    return DeserializeByte(ref bytes, startIndex);
                 case SerializedTypes.UInt16:
-                    return DeserializeUInt16(bytes, startIndex);
+                    return DeserializeUInt16(ref bytes, startIndex);
                 case SerializedTypes.Int16:
-                    return DeserializeInt16(bytes, startIndex);
+                    return DeserializeInt16(ref bytes, startIndex);
                 case SerializedTypes.UInt32:
-                    return DeserializeUInt32(bytes, startIndex);
+                    return DeserializeUInt32(ref bytes, startIndex);
                 case SerializedTypes.Int32:
-                    return DeserializeInt32(bytes, startIndex);
+                    return DeserializeInt32(ref bytes, startIndex);
                 case SerializedTypes.UInt64:
-                    return DeserializeUInt64(bytes, startIndex);
+                    return DeserializeUInt64(ref bytes, startIndex);
                 case SerializedTypes.Int64:
-                    return DeserializeInt64(bytes, startIndex);
+                    return DeserializeInt64(ref bytes, startIndex);
                 case SerializedTypes.Single:
-                    return DeserializeSingle(bytes, startIndex);
+                    return DeserializeSingle(ref bytes, startIndex);
                 case SerializedTypes.Double:
-                    return DeserializeDouble(bytes, startIndex);
+                    return DeserializeDouble(ref bytes, startIndex);
                 case SerializedTypes.String:
-                    return DeserializeString(bytes, startIndex);
+                    return DeserializeString(ref bytes, startIndex);
                 case SerializedTypes.VRCPlayerApi:
-                    return DeserializeVRCPlayerApi(bytes, startIndex);
+                    return DeserializeVRCPlayerApi(ref bytes, startIndex);
                 case SerializedTypes.Color:
-                    return DeserializeColor(bytes, startIndex);
+                    return DeserializeColor(ref bytes, startIndex);
                 case SerializedTypes.Color32:
-                    return DeserializeColor32(bytes, startIndex);
+                    return DeserializeColor32(ref bytes, startIndex);
                 case SerializedTypes.Vector2:
-                    return DeserializeVector2(bytes, startIndex);
+                    return DeserializeVector2(ref bytes, startIndex);
                 case SerializedTypes.Vector2Int:
-                    return DeserializeVector2Int(bytes, startIndex);
+                    return DeserializeVector2Int(ref bytes, startIndex);
                 case SerializedTypes.Vector3:
-                    return DeserializeVector3(bytes, startIndex);
+                    return DeserializeVector3(ref bytes, startIndex);
                 case SerializedTypes.Vector3Int:
-                    return DeserializeVector3Int(bytes, startIndex);
+                    return DeserializeVector3Int(ref bytes, startIndex);
                 case SerializedTypes.Vector4:
-                    return DeserializeVector4(bytes, startIndex);
+                    return DeserializeVector4(ref bytes, startIndex);
                 case SerializedTypes.Quaternion:
-                    return DeserializeQuaternion(bytes, startIndex);
+                    return DeserializeQuaternion(ref bytes, startIndex);
                 case SerializedTypes.DateTime:
-                    return DeserializeDateTime(bytes, startIndex);
+                    return DeserializeDateTime(ref bytes, startIndex);
                 case SerializedTypes.Null:
                 case SerializedTypes.None:
                     return null;
@@ -336,8 +336,8 @@ namespace USPPNet {
             }
         }
 
-        public static object[] Deserialize(byte[] bytes) {
-            var serlSize = DeserializeUInt16(bytes, 0);
+        public static object[] Deserialize(ref byte[] bytes) {
+            var serlSize = DeserializeUInt16(ref bytes, 0);
 
             var outputObjects = new object[serlSize];
             var byteIndex = 2;
@@ -345,27 +345,27 @@ namespace USPPNet {
             var objectIndex = 0;
 
             while (objectIndex < serlSize) {
-                var type = (SerializedTypes)DeserializeByte(bytes, byteIndex);
+                var type = (SerializedTypes)DeserializeByte(ref bytes, byteIndex);
 
                 if (type == SerializedTypes.Array) {
-                    var arrayLength = DeserializeUInt16(bytes, byteIndex + 4);
+                    var arrayLength = DeserializeUInt16(ref bytes, byteIndex + 4);
 
-                    outputObjects[objectIndex] = DeserializeArray(bytes, byteIndex + 1);
+                    outputObjects[objectIndex] = DeserializeArray(ref bytes, byteIndex + 1);
                     byteIndex += 1 + arrayLength;
                     objectIndex++;
                     continue;
                 }
 
                 if (type == SerializedTypes.String) {
-                    var stringByteSize = DeserializeUInt16(bytes, byteIndex + 1) + 2;
-                    outputObjects[objectIndex] = DeserializeString(bytes, byteIndex + 1);
+                    var stringByteSize = DeserializeUInt16(ref bytes, byteIndex + 1) + 2;
+                    outputObjects[objectIndex] = DeserializeString(ref bytes, byteIndex + 1);
                     byteIndex += 1 + stringByteSize;
                     objectIndex++;
                     continue;
                 }
 
                 var byteSize = GetSizeFromType(type, null);
-                outputObjects[objectIndex] = DeserializeKnownType(bytes, type, byteIndex + 1);
+                outputObjects[objectIndex] = DeserializeKnownType(ref bytes, type, byteIndex + 1);
                 byteIndex += byteSize;
                 objectIndex++;
             }
@@ -373,33 +373,33 @@ namespace USPPNet {
             return outputObjects;
         }
 
-        public static bool DeserializeBool(byte[] bytes, int startIndex) => BitConverter.ToBoolean(bytes, startIndex);
+        public static bool DeserializeBool(ref byte[] bytes, int startIndex) => BitConverter.ToBoolean(bytes, startIndex);
 
 
-        public static byte DeserializeByte(byte[] bytes, int startIndex) => bytes[startIndex];
+        public static byte DeserializeByte(ref byte[] bytes, int startIndex) => bytes[startIndex];
 
 
-        public static sbyte DeserializeSByte(byte[] bytes, int startIndex) => Convert.ToSByte(bytes[startIndex] + sbyte.MinValue);
+        public static sbyte DeserializeSByte(ref byte[] bytes, int startIndex) => Convert.ToSByte(bytes[startIndex] + sbyte.MinValue);
 
 
-        public static short DeserializeInt16(byte[] bytes, int startIndex) => BitConverter.ToInt16(bytes, startIndex);
+        public static short DeserializeInt16(ref byte[] bytes, int startIndex) => BitConverter.ToInt16(bytes, startIndex);
         
-        public static int DeserializeInt32(byte[] bytes, int startIndex) => BitConverter.ToInt32(bytes, startIndex);
+        public static int DeserializeInt32(ref byte[] bytes, int startIndex) => BitConverter.ToInt32(bytes, startIndex);
 
-        public static long DeserializeInt64(byte[] bytes, int startIndex) => BitConverter.ToInt64(bytes, startIndex);
+        public static long DeserializeInt64(ref byte[] bytes, int startIndex) => BitConverter.ToInt64(bytes, startIndex);
         
-        public static ushort DeserializeUInt16(byte[] bytes, int startIndex) => BitConverter.ToUInt16(bytes, startIndex);
+        public static ushort DeserializeUInt16(ref byte[] bytes, int startIndex) => BitConverter.ToUInt16(bytes, startIndex);
         
-        public static uint DeserializeUInt32(byte[] bytes, int startIndex) => BitConverter.ToUInt32(bytes, startIndex);
+        public static uint DeserializeUInt32(ref byte[] bytes, int startIndex) => BitConverter.ToUInt32(bytes, startIndex);
         
-        public static ulong DeserializeUInt64(byte[] bytes, int startIndex) => BitConverter.ToUInt64(bytes, startIndex);
+        public static ulong DeserializeUInt64(ref byte[] bytes, int startIndex) => BitConverter.ToUInt64(bytes, startIndex);
 
-        public static float DeserializeSingle(byte[] bytes, int startIndex) => BitConverter.ToSingle(bytes, startIndex);
+        public static float DeserializeSingle(ref byte[] bytes, int startIndex) => BitConverter.ToSingle(bytes, startIndex);
         
-        public static double DeserializeDouble(byte[] bytes, int startIndex) => BitConverter.ToDouble(bytes, startIndex);
+        public static double DeserializeDouble(ref byte[] bytes, int startIndex) => BitConverter.ToDouble(bytes, startIndex);
 
-        public static string DeserializeString(byte[] bytes, int startIndex) {
-            var stringByteSize = DeserializeUInt16(bytes, startIndex) + 2;
+        public static string DeserializeString(ref byte[] bytes, int startIndex) {
+            var stringByteSize = DeserializeUInt16(ref bytes, startIndex) + 2;
             var stopIndex = startIndex + stringByteSize;
             var charBuffer = new char[stringByteSize];
 
@@ -442,8 +442,8 @@ namespace USPPNet {
             return new string(newBuff);
         }
 
-        public static VRCPlayerApi DeserializeVRCPlayerApi(byte[] bytes, int startIndex) {
-            var playerBits = DeserializeUInt16(bytes, startIndex);
+        public static VRCPlayerApi DeserializeVRCPlayerApi(ref byte[] bytes, int startIndex) {
+            var playerBits = DeserializeUInt16(ref bytes, startIndex);
 
             if ((playerBits & 0x8000) != 0)
                 return default;
@@ -452,59 +452,59 @@ namespace USPPNet {
             return VRCPlayerApi.GetPlayerById(playerId);
         }
 
-        public static Color DeserializeColor(byte[] bytes, int startIndex) {
-            var r = DeserializeSingle(bytes, startIndex);
-            var g = DeserializeSingle(bytes, startIndex + 4);
-            var b = DeserializeSingle(bytes, startIndex + 8);
-            var a = DeserializeSingle(bytes, startIndex + 12);
+        public static Color DeserializeColor(ref byte[] bytes, int startIndex) {
+            var r = DeserializeSingle(ref bytes, startIndex);
+            var g = DeserializeSingle(ref bytes, startIndex + 4);
+            var b = DeserializeSingle(ref bytes, startIndex + 8);
+            var a = DeserializeSingle(ref bytes, startIndex + 12);
 
             return new Color(r, g, b, a);
         }
 
-        public static Color32 DeserializeColor32(byte[] bytes, int startIndex) => new Color32(bytes[0], bytes[1], bytes[2], bytes[3]);
+        public static Color32 DeserializeColor32(ref byte[] bytes, int startIndex) => new Color32(bytes[0], bytes[1], bytes[2], bytes[3]);
 
-        public static Vector2 DeserializeVector2(byte[] bytes, int startIndex) {
-            var x = DeserializeSingle(bytes, startIndex);
-            var y = DeserializeSingle(bytes, startIndex + 4);
+        public static Vector2 DeserializeVector2(ref byte[] bytes, int startIndex) {
+            var x = DeserializeSingle(ref bytes, startIndex);
+            var y = DeserializeSingle(ref bytes, startIndex + 4);
 
             return new Vector2(x, y);
         }
 
-        public static Vector2Int DeserializeVector2Int(byte[] bytes, int startIndex) {
-            var x = DeserializeInt32(bytes, startIndex);
-            var y = DeserializeInt32(bytes, startIndex + 4);
+        public static Vector2Int DeserializeVector2Int(ref byte[] bytes, int startIndex) {
+            var x = DeserializeInt32(ref bytes, startIndex);
+            var y = DeserializeInt32(ref bytes, startIndex + 4);
 
             return new Vector2Int(x, y);
         }
 
-        public static Vector3 DeserializeVector3(byte[] bytes, int startIndex) {
-            var x = DeserializeSingle(bytes, startIndex);
-            var y = DeserializeSingle(bytes, startIndex + 4);
-            var z = DeserializeSingle(bytes, startIndex + 8);
+        public static Vector3 DeserializeVector3(ref byte[] bytes, int startIndex) {
+            var x = DeserializeSingle(ref bytes, startIndex);
+            var y = DeserializeSingle(ref bytes, startIndex + 4);
+            var z = DeserializeSingle(ref bytes, startIndex + 8);
 
             return new Vector3(x, y, z);
         }
 
-        public static Vector3Int DeserializeVector3Int(byte[] bytes, int startIndex) {
-            var x = DeserializeInt32(bytes, startIndex);
-            var y = DeserializeInt32(bytes, startIndex + 4);
-            var z = DeserializeInt32(bytes, startIndex + 8);
+        public static Vector3Int DeserializeVector3Int(ref byte[] bytes, int startIndex) {
+            var x = DeserializeInt32(ref bytes, startIndex);
+            var y = DeserializeInt32(ref bytes, startIndex + 4);
+            var z = DeserializeInt32(ref bytes, startIndex + 8);
 
             return new Vector3Int(x, y, z);
         }
 
-        public static Vector4 DeserializeVector4(byte[] bytes, int startIndex) {
-            var x = DeserializeSingle(bytes, startIndex);
-            var y = DeserializeSingle(bytes, startIndex + 4);
-            var z = DeserializeSingle(bytes, startIndex + 8);
-            var w = DeserializeSingle(bytes, startIndex + 12);
+        public static Vector4 DeserializeVector4(ref byte[] bytes, int startIndex) {
+            var x = DeserializeSingle(ref bytes, startIndex);
+            var y = DeserializeSingle(ref bytes, startIndex + 4);
+            var z = DeserializeSingle(ref bytes, startIndex + 8);
+            var w = DeserializeSingle(ref bytes, startIndex + 12);
 
             return new Vector4(x, y, z, w);
         }
 
 
-        public static Quaternion DeserializeQuaternion(byte[] bytes, int startIndex) {
-            var deVec4 = DeserializeVector4(bytes, startIndex);
+        public static Quaternion DeserializeQuaternion(ref byte[] bytes, int startIndex) {
+            var deVec4 = DeserializeVector4(ref bytes, startIndex);
             return new Quaternion(
                 deVec4.x,
                 deVec4.y,
@@ -514,23 +514,23 @@ namespace USPPNet {
         }
 
 
-        public static DateTime DeserializeDateTime(byte[] bytes, int startIndex) => new DateTime(DeserializeInt64(bytes, startIndex));
+        public static DateTime DeserializeDateTime(ref byte[] bytes, int startIndex) => new DateTime(DeserializeInt64(ref bytes, startIndex));
 
 
-        public static Array DeserializeArray(byte[] bytes, int startIndex) {
+        public static Array DeserializeArray(ref byte[] bytes, int startIndex) {
             var arrayType = (SerializedTypes)bytes[startIndex];
 
             if (arrayType == SerializedTypes.Array)
                 return null;
 
-            var arrayLength = DeserializeUInt16(bytes, startIndex + 1);
+            var arrayLength = DeserializeUInt16(ref bytes, startIndex + 1);
             var byteIndex = 5;
 
             var newArray = Array.CreateInstance(GetTypeFromSerializedType(arrayType), arrayLength);
             if (arrayType == SerializedTypes.String) {
                 for (var i = 0; i < arrayLength; i++) {
-                    var stringByteSize = DeserializeUInt16(bytes, startIndex + byteIndex) + 2;
-                    newArray.SetValue(DeserializeString(bytes, startIndex + byteIndex), i);
+                    var stringByteSize = DeserializeUInt16(ref bytes, startIndex + byteIndex) + 2;
+                    newArray.SetValue(DeserializeString(ref bytes, startIndex + byteIndex), i);
 
                     byteIndex += stringByteSize;
                 }
@@ -538,7 +538,7 @@ namespace USPPNet {
             else {
                 var typeSize = GetSizeFromType(arrayType, null) - 1;
                 for (var i = 0; i < arrayLength; i++) {
-                    newArray.SetValue(DeserializeKnownType(bytes, arrayType, startIndex + byteIndex), i);
+                    newArray.SetValue(DeserializeKnownType(ref bytes, arrayType, startIndex + byteIndex), i);
                     byteIndex += typeSize;
                 }
             }
