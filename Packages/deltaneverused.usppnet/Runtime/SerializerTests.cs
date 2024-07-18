@@ -21,7 +21,7 @@ namespace USPPNet {
             var stop = new Stopwatch();
 
             Debug.Log("Starting Tests!");
-            stop.Start();
+            stop.Restart();
             for (var i = 0; i < tests; i++) {
                 TestSerializerBool();
                 TestSerializerByte();
@@ -51,7 +51,61 @@ namespace USPPNet {
             stop.Stop();
 
             Debug.Log(
-                $"Tests Done! totalTime: {stop.Elapsed.TotalMilliseconds}ms, {stop.Elapsed.TotalMilliseconds / tests}ms per test");
+                $"Individual Tests Done! totalTime: {stop.Elapsed.TotalMilliseconds}ms, {stop.Elapsed.TotalMilliseconds / tests}ms per test");
+            
+            Debug.Log("Starting Tests!");
+            stop.Reset();
+            for (var i = 0; i < tests; i++) {
+                var things = new object[] {
+                    "Test string!!",
+                    Random.Range(0, 100),
+                    (short)Random.Range(0, 255),
+                    new Vector2(Random.value,Random.value),
+                    new DateTime(Random.Range(0, int.MaxValue)),
+                    123.3d,
+                    Random.value,
+                    new int[] {1, 2, 3, 4, 5, 6, 7},
+                    new string[] {$"testing string {Random.value}", $"string test {Random.value}", $"more strings {Random.value}"},
+                    90812739827649,
+                    9132,
+                    337,
+                    8139,
+                    true,
+                    false,
+                    true,
+                    true,
+                };
+                
+                stop.Start(); // Start messuring
+                var stuff = Serializer.Serialize(things);
+                var dethings = Serializer.Deserialize(ref stuff);
+                stop.Stop(); // Stop messuring
+
+                if (dethings.Length != things.Length) {
+                    Debug.Log("things and dethings not same length");
+                    return;
+                }
+
+                for (int j = 0; j < things.Length; j++) {
+                    if (!things[j].Equals(dethings[j])) {
+                        if (Serializer.IsArray(things[j])) {
+                            //Debug.Log(
+                            //    $"item at {j} not same, things: {((object[])things[j]).Length}, dethings: {((object[])dethings[j]).Length}");
+                        }
+                        else {
+                            Debug.Log(
+                                $"item at {j} not same, things: {things[j].ToString()}, dethings: {dethings[j].ToString()}");
+                            return;
+                        }
+                        
+                    }
+                }
+            }
+
+            stop.Stop();
+
+            Debug.Log(
+                $"Object Array Tests Done! totalTime: {stop.Elapsed.TotalMilliseconds}ms, {stop.Elapsed.TotalMilliseconds / tests}ms per test");
         }
 
         private static void TestSerializerBool() {
