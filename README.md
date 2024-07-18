@@ -2,9 +2,7 @@
  UdonSharp RPC with arguments!
 
 # How to use
-1. Download and install [USPPPatcher](https://github.com/DeltaNeverUsed/USPPPatcher), The code that used to be here for patching the U# compiler has been moved out into a different project
-2. Clone the git repo into your Project's assets folder.
-3. Wait for it to patch the UdonSharp Compiler.
+1. Download and install the project from my [VCC Listing](https://deltaneverused.github.io/VRChatPackages/)
 4. Include USPPNet and System in your script.
 5. Add "// USPPNet Init" at the bottom of your UdonSharpBehaviour.
 6. Add "// USPPNet OnDeserialization" inside your OnDeserialization function.
