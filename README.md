@@ -7,7 +7,6 @@
 5. Add "// USPPNet Init" at the bottom of your UdonSharpBehaviour.
 6. Add "// USPPNet OnDeserialization" inside your OnDeserialization function.
 7. Add "// USPPNet OnPostSerialization" inside your OnPostSerialization function.
-    - It is semi important that OnDeserialization comes before OnPostSerialization, this is mainly to prevent in accurate compile errors, for the same reason you should put all of your own code before and of the "// USPPNet" comments.
 
 ## Usage
 ### Boilerplate 
