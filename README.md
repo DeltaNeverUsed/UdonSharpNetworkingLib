@@ -3,10 +3,10 @@
 
 # How to use
 1. Download and install the project from my [VCC Listing](https://deltaneverused.github.io/VRChatPackages/)
-4. Include USPPNet and System in your script.
-5. Add "// USPPNet Init" at the bottom of your UdonSharpBehaviour.
-6. Add "// USPPNet OnDeserialization" inside your OnDeserialization function.
-7. Add "// USPPNet OnPostSerialization" inside your OnPostSerialization function.
+2. Include USPPNet and System in your script.
+3. Add "// USPPNet Init" at the bottom of your UdonSharpBehaviour.
+4. Add "// USPPNet OnDeserialization" inside your OnDeserialization function.
+5. Add "// USPPNet OnPostSerialization" inside your OnPostSerialization function.
 
 ## Usage
 ### Boilerplate 
