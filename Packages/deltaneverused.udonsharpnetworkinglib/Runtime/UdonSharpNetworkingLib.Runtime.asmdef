@@ -1,13 +1,11 @@
 {
-    "name": "deltaneverused.usppnet.Editor",
+    "name": "UdonSharpNetworkingLib.Runtime",
     "rootNamespace": "",
     "references": [
         "VRC.SDK3",
-        "VRC.SDK3.Editor",
         "VRC.SDKBase",
-        "VRC.SDKBase.Editor",
-        "deltaneverused.usppnet",
-        "deltaneverused.uspppatcher.Editor"
+        "UdonSharp.Runtime",
+        "VRC.Udon"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

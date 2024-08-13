@@ -1,10 +1,11 @@
 using System;
 using System.Text;
 using UnityEngine;
+using VRC.SDK3.Data;
 using VRC.SDKBase;
 using Debug = UnityEngine.Debug;
 
-namespace USPPNet {
+namespace UdonSharpNetworkingLib {
     /*
      * Array:
      *      1 byte: (SerializedTypes) SerializedType
@@ -603,7 +604,7 @@ namespace USPPNet {
                     return new byte[0];
             }
         }
-
+        
         public static byte[] Serialize(object[] input) {
             var types = new SerializedTypes[input.Length];
             var isArray = new bool[input.Length];

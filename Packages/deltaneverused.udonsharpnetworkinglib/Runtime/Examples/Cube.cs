@@ -6,7 +6,7 @@ using VRC.Udon.Common;
 
 namespace USPPNet.Examples {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class Cube : USPPNetUdonSharpBehaviour {
+    public class Cube : NetworkingLibUdonSharpBehaviour {
         private void USPPNET_Test(string msg, int test, VRCPlayerApi caller, int[] testArray) // Demo method
         {
             Debug.Log($"Triggered! {msg}, num: {test}, caller: ({caller.displayName}, {caller.playerId}), DebugArray: {testArray[0]}, {testArray[1]}, {testArray[2]}");

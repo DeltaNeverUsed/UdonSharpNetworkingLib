@@ -1,4 +1,5 @@
-﻿#if UNITY_EDITOR && !COMPILER_UDONSHARP
+﻿
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -204,8 +205,9 @@ namespace USPPNet {
                     offset++;
                 }
 
+                
                 sb.Append($@"
-                if(method == {functions.Keys.ToArray().USPPNet_IndexOf(func)}) " + "{" + $@"
+                if(method == {Array.IndexOf(functions.Keys.ToArray(), func)}) " + "{" + $@"
                     {func}({tempArgs});");
 
                 sb.Append($"USPPNet_offset += {offset};");
