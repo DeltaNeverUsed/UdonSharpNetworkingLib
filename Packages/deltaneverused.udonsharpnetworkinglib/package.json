@@ -1,12 +1,11 @@
 {
-  "name": "deltaneverused.usppnet",
-  "displayName": "USPPNet",
-  "version": "0.0.7",
+  "name": "deltaneverused.udonsharpnetworkinglibrary",
+  "displayName": "UdonSharp Networking Library",
+  "version": "1.0.0-alpha",
   "description": "Networking library",
   "gitDependencies": {},
   "vpmDependencies": {
     "com.vrchat.udonsharp": "1.x.x",
-    "deltaneverused.uspppatcher": "^0.0.x",
     "com.vrchat.worlds": "^3.5.x"
   },
   "author": {

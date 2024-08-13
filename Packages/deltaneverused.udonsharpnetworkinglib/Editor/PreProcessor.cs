@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
-using USPPPatcher;
-using UnityEngine;
 
 namespace USPPNet {
     public class PreProcessorInstance {
@@ -244,7 +242,7 @@ namespace USPPNet {
             return lines;
         }
 
-        private static string Parse(string prog, PPInfo info) {
+        private static string Parse(string prog) {
             if (!Uses_USPPNet(ref prog))
                 return prog;
 
@@ -260,11 +258,6 @@ namespace USPPNet {
             //Debug.Log(prog); // Uncomment to get program after parsing
 
             return prog;
-        }
-
-        [InitializeOnLoadMethod]
-        private static void Subscribe() {
-            PPHandler.Subscribe(Parse, 1, "USPPNet");
         }
     }
 }
