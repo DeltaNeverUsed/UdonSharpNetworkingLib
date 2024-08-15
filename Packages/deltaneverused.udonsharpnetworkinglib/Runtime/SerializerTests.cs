@@ -8,7 +8,7 @@ using VRC.SDKBase;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
-namespace USPPNet {
+namespace UdonSharpNetworkingLib {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class SerializerTests : UdonSharpBehaviour {
         public int tests = 1;

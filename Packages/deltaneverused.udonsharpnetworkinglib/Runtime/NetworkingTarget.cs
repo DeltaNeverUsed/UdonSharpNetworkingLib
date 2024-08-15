@@ -9,6 +9,8 @@ namespace UdonSharpNetworkingLib {
         Master,
         
         Specific,
+        
+        Local,
     }
     
     [PublicAPI]

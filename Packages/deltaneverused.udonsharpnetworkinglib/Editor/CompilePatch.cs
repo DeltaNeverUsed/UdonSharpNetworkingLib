@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 using HarmonyLib;
-using MonoMod.Utils;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace UdonSharpNetworkingLib {
     public static class CompilePatch {
@@ -32,8 +34,8 @@ namespace UdonSharpNetworkingLib {
             // New local variables that I'm using.
             var binding = generator.DeclareLocal(ReflectionHelper.ByName("UdonSharp.Compiler.ModuleBinding"));
             var tree = generator.DeclareLocal(typeof(SyntaxNode));
-            var walker = generator.DeclareLocal(typeof(UdonSharpTimerInjector));
-            var newroot = generator.DeclareLocal(typeof(UdonSharpTimerInjector));
+            var walker = generator.DeclareLocal(typeof(UdonSharpSyntaxRewriterInjector));
+            var newroot = generator.DeclareLocal(typeof(UdonSharpSyntaxRewriterInjector));
             
             syntaxRebuilder.Add(new(OpCodes.Stloc_S , binding)); // store binding
             
@@ -48,7 +50,7 @@ namespace UdonSharpNetworkingLib {
             syntaxRebuilder.Add(new(OpCodes.Stloc_S , tree));
 
             // Creating the syntax walker object
-            syntaxRebuilder.Add(new(OpCodes.Newobj  , ReflectionHelper.GetConstructor(typeof(UdonSharpTimerInjector), new Type[] { }, BindingFlags.Public | BindingFlags.Instance)));
+            syntaxRebuilder.Add(new(OpCodes.Newobj  , ReflectionHelper.GetConstructor(typeof(UdonSharpSyntaxRewriterInjector), new Type[] { }, BindingFlags.Public | BindingFlags.Instance)));
             syntaxRebuilder.Add(new(OpCodes.Stloc_S , walker));
 
             // Running the walker on the syntax tree

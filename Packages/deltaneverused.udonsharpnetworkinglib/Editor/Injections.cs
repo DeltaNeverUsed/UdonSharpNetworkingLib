@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using MonoMod.Utils;
 using UdonSharp.Compiler;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
@@ -23,6 +21,7 @@ namespace UdonSharpNetworkingLib {
         }
 
         private static void Patch() {
+            _harmony ??= new Harmony("DeltaNeverUsed.UdonSharpNetworkingLib.patch");
             Unpatch();
             _harmony.PatchAll();
 
