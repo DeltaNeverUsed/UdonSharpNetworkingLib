@@ -85,13 +85,10 @@ namespace UdonSharpNetworkingLib {
             RequestSerialization();
         }
 
-        public override void OnDeserialization() {
-            NewOnDeserialization();
-        }
-
         public override void OnDeserialization(DeserializationResult result) {
             if (Time.realtimeSinceStartup - result.sendTime < 8)
                 HandleDeserialization();
+            NewOnDeserialization();
             NewOnDeserialization(result);
         }
 
