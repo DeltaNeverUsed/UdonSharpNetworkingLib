@@ -85,10 +85,14 @@ namespace UdonSharpNetworkingLib {
             RequestSerialization();
         }
 
+        public override void OnDeserialization() {
+            NewOnDeserialization();
+        }
+
         public override void OnDeserialization(DeserializationResult result) {
-            if (Time.realtimeSinceStartup - result.sendTime > 8)
-                return;
-            HandleDeserialization();
+            if (Time.realtimeSinceStartup - result.sendTime < 8)
+                HandleDeserialization();
+            NewOnDeserialization(result);
         }
 
         private void HandleDeserialization() {
@@ -135,6 +139,11 @@ namespace UdonSharpNetworkingLib {
         }
 
         public override void OnPreSerialization() {
+            HandlePreSerialization();
+            NewOnPreSerialization();
+        }
+
+        private void HandlePreSerialization() {
             if (!_serializationRequired)
                 return;
             _serializationRequired = false;
@@ -157,7 +166,13 @@ namespace UdonSharpNetworkingLib {
 
         public override void OnPostSerialization(SerializationResult result) {
             _data = new byte[0];
+            NewOnPostSerialization(result);
         }
+
+        public virtual void NewOnDeserialization() { }
+        public virtual void NewOnDeserialization(DeserializationResult result) { }
+        public virtual void NewOnPreSerialization() { }
+        public virtual void NewOnPostSerialization(SerializationResult result) { }
 
         /// <summary>
         /// Do not override!
