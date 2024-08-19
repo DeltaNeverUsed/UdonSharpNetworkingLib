@@ -88,4 +88,4 @@ namespace UdonSharpNetworkingLib.Samples {
 ```
 
 # Known Issues
-- None so far
+- Failing to compile if you override the ``OnSerialization`` functions, Please add ``New`` onto the function names to work around this i.e. ``public override void NewOnDeserialization() { }``
