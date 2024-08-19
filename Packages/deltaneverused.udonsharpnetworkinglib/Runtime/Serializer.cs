@@ -1,10 +1,13 @@
 using System;
 using System.Text;
+using UdonSharp;
 using UnityEngine;
+using VRC.SDK3.Data;
 using VRC.SDKBase;
 using Debug = UnityEngine.Debug;
+using Type = System.Type;
 
-namespace USPPNet {
+namespace UdonSharpNetworkingLib {
     /*
      * Array:
      *      1 byte: (SerializedTypes) SerializedType
@@ -80,13 +83,28 @@ namespace USPPNet {
     }
 
     public static class Serializer {
-        private static byte[] SubArray(byte[] array, int startIndex, int length) {
-            var subArray = new byte[length];
+        public static T[] SubArray<T>(T[] array, int startIndex, int length) {
+            var subArray = new T[length];
             Array.Copy(array, startIndex, subArray, 0, length);
             return subArray;
         }
 
-        public static int GetSizeFromType(SerializedTypes type, object input, bool isArray = false) {
+        public static T[] ResizeArray<T>(T[] array, int newSize, int copyLen) {
+            var tempArray = new T[newSize];
+            Array.Copy(array, tempArray, copyLen);
+            return tempArray;
+        }
+
+        public static T[] ConvertAll<T, U>(U[] array) {
+            var newArray = new T[array.Length];
+            for (var i = 0; i < array.Length; i++) {
+                newArray[i] = (T)(object)array[i];
+            }
+
+            return newArray;
+        }
+
+        public static int GetSizeFromType(SerializedTypes type, object input) {
             var map = new[] {
                 TypeSizes.Null,
 
@@ -126,23 +144,8 @@ namespace USPPNet {
                 TypeSizes.Null
             };
 
-            if (isArray) {
-                var arrayBaseSize = (int)TypeSizes.Int32 + (int)TypeSizes.Byte * 2;
-                var array = (Array)input;
-                if (type == SerializedTypes.String) {
-                    var arraySize = arrayBaseSize;
-                    for (var i = 0; i < array.Length; i++)
-                        arraySize += ((string)array.GetValue(i)).Length * 4 + 1;
-
-                    return arraySize;
-                }
-
-                return (int)map[(int)type] * array.Length + arrayBaseSize;
-            }
-
             if (type == SerializedTypes.String)
                 return ((string)input).Length * 4 + (int)TypeSizes.Byte;
-
             return (int)map[(int)type] + (int)TypeSizes.Byte;
         }
 
@@ -202,59 +205,113 @@ namespace USPPNet {
             }
         }
 
-        public static SerializedTypes GetSerializedType(object input) {
+        public static SerializedTypes GetSerializedType(object input, bool isArray) {
             if (!Utilities.IsValid(input))
                 return SerializedTypes.Null;
 
             var type = input.GetType();
             var serializedType = SerializedTypes.Null;
 
-            if (type == typeof(bool) || type == typeof(bool[]))
+            if (isArray) {
+                if (type == typeof(object[]))
+                    serializedType = SerializedTypes.Array;
+                else if (type == typeof(bool[]))
+                    serializedType = SerializedTypes.Boolean;
+                else if (type == typeof(byte[]))
+                    serializedType = SerializedTypes.Byte;
+                else if (type == typeof(sbyte[]))
+                    serializedType = SerializedTypes.SByte;
+                else if (type == typeof(short[]))
+                    serializedType = SerializedTypes.Int16;
+                else if (type == typeof(ushort[]))
+                    serializedType = SerializedTypes.UInt16;
+                else if (type == typeof(int[]))
+                    serializedType = SerializedTypes.Int32;
+                else if (type == typeof(uint[]))
+                    serializedType = SerializedTypes.UInt32;
+                else if (type == typeof(long[]))
+                    serializedType = SerializedTypes.Int64;
+                else if (type == typeof(ulong[]))
+                    serializedType = SerializedTypes.UInt64;
+                else if (type == typeof(float[]))
+                    serializedType = SerializedTypes.Single;
+                else if (type == typeof(double[]))
+                    serializedType = SerializedTypes.Double;
+                else if (type == typeof(string[]))
+                    serializedType = SerializedTypes.String;
+                else if (type == typeof(VRCPlayerApi[]))
+                    serializedType = SerializedTypes.VRCPlayerApi;
+                else if (type == typeof(Color[]))
+                    serializedType = SerializedTypes.Color;
+                else if (type == typeof(Color32[]))
+                    serializedType = SerializedTypes.Color32;
+                else if (type == typeof(Vector2[]))
+                    serializedType = SerializedTypes.Vector2;
+                else if (type == typeof(Vector2Int[]))
+                    serializedType = SerializedTypes.Vector2Int;
+                else if (type == typeof(Vector3[]))
+                    serializedType = SerializedTypes.Vector3;
+                else if (type == typeof(Vector3Int[]))
+                    serializedType = SerializedTypes.Vector3Int;
+                else if (type == typeof(Vector4[]))
+                    serializedType = SerializedTypes.Vector4;
+                else if (type == typeof(Quaternion[]))
+                    serializedType = SerializedTypes.Quaternion;
+                else if (type == typeof(DateTime[]))
+                    serializedType = SerializedTypes.DateTime;
+                else
+                    Debug.LogError($"unsupported type: {type.FullName}, falling back to null.");
+            }
+            else {
+                if (type == typeof(object[]))
+                serializedType = SerializedTypes.Array;
+            else if (type == typeof(bool))
                 serializedType = SerializedTypes.Boolean;
-            else if (type == typeof(byte) || type == typeof(byte[]))
+            else if (type == typeof(byte))
                 serializedType = SerializedTypes.Byte;
-            else if (type == typeof(sbyte) || type == typeof(sbyte[]))
+            else if (type == typeof(sbyte))
                 serializedType = SerializedTypes.SByte;
-            else if (type == typeof(short) || type == typeof(short[]))
+            else if (type == typeof(short))
                 serializedType = SerializedTypes.Int16;
-            else if (type == typeof(ushort) || type == typeof(ushort[]))
+            else if (type == typeof(ushort))
                 serializedType = SerializedTypes.UInt16;
-            else if (type == typeof(int) || type == typeof(int[]))
+            else if (type == typeof(int))
                 serializedType = SerializedTypes.Int32;
-            else if (type == typeof(uint) || type == typeof(uint[]))
+            else if (type == typeof(uint))
                 serializedType = SerializedTypes.UInt32;
-            else if (type == typeof(long) || type == typeof(long[]))
+            else if (type == typeof(long))
                 serializedType = SerializedTypes.Int64;
-            else if (type == typeof(ulong) || type == typeof(ulong[]))
+            else if (type == typeof(ulong))
                 serializedType = SerializedTypes.UInt64;
-            else if (type == typeof(float) || type == typeof(float[]))
+            else if (type == typeof(float))
                 serializedType = SerializedTypes.Single;
-            else if (type == typeof(double) || type == typeof(double[]))
+            else if (type == typeof(double))
                 serializedType = SerializedTypes.Double;
-            else if (type == typeof(string) || type == typeof(string[]))
+            else if (type == typeof(string))
                 serializedType = SerializedTypes.String;
-            else if (type == typeof(VRCPlayerApi) || type == typeof(VRCPlayerApi[]))
+            else if (type == typeof(VRCPlayerApi))
                 serializedType = SerializedTypes.VRCPlayerApi;
-            else if (type == typeof(Color) || type == typeof(Color[]))
+            else if (type == typeof(Color))
                 serializedType = SerializedTypes.Color;
-            else if (type == typeof(Color32) || type == typeof(Color32[]))
+            else if (type == typeof(Color32))
                 serializedType = SerializedTypes.Color32;
-            else if (type == typeof(Vector2) || type == typeof(Vector2[]))
+            else if (type == typeof(Vector2))
                 serializedType = SerializedTypes.Vector2;
-            else if (type == typeof(Vector2Int) || type == typeof(Vector2Int[]))
+            else if (type == typeof(Vector2Int))
                 serializedType = SerializedTypes.Vector2Int;
-            else if (type == typeof(Vector3) || type == typeof(Vector3[]))
+            else if (type == typeof(Vector3))
                 serializedType = SerializedTypes.Vector3;
-            else if (type == typeof(Vector3Int) || type == typeof(Vector3Int[]))
+            else if (type == typeof(Vector3Int))
                 serializedType = SerializedTypes.Vector3Int;
-            else if (type == typeof(Vector4) || type == typeof(Vector4[]))
+            else if (type == typeof(Vector4))
                 serializedType = SerializedTypes.Vector4;
-            else if (type == typeof(Quaternion) || type == typeof(Quaternion[]))
+            else if (type == typeof(Quaternion))
                 serializedType = SerializedTypes.Quaternion;
-            else if (type == typeof(DateTime) || type == typeof(DateTime[]))
+            else if (type == typeof(DateTime))
                 serializedType = SerializedTypes.DateTime;
             else
-                Debug.LogError($"unsupported type: {type.FullName}");
+                Debug.LogError($"unsupported type: {type.FullName}, falling back to null.");
+            }
 
             return serializedType;
         }
@@ -282,52 +339,52 @@ namespace USPPNet {
 
         #region Deserialize
 
-        public static object DeserializeKnownType(ref byte[] bytes, SerializedTypes type, int startIndex) {
+        public static object DeserializeKnownType(byte[] bytes, SerializedTypes type, int startIndex) {
             switch (type) {
                 case SerializedTypes.Boolean:
-                    return DeserializeBool(ref bytes, startIndex);
+                    return DeserializeBool(bytes, startIndex);
                 case SerializedTypes.SByte:
-                    return DeserializeSByte(ref bytes, startIndex);
+                    return DeserializeSByte(bytes, startIndex);
                 case SerializedTypes.Byte:
-                    return DeserializeByte(ref bytes, startIndex);
+                    return DeserializeByte(bytes, startIndex);
                 case SerializedTypes.UInt16:
-                    return DeserializeUInt16(ref bytes, startIndex);
+                    return DeserializeUInt16(bytes, startIndex);
                 case SerializedTypes.Int16:
-                    return DeserializeInt16(ref bytes, startIndex);
+                    return DeserializeInt16(bytes, startIndex);
                 case SerializedTypes.UInt32:
-                    return DeserializeUInt32(ref bytes, startIndex);
+                    return DeserializeUInt32(bytes, startIndex);
                 case SerializedTypes.Int32:
-                    return DeserializeInt32(ref bytes, startIndex);
+                    return DeserializeInt32(bytes, startIndex);
                 case SerializedTypes.UInt64:
-                    return DeserializeUInt64(ref bytes, startIndex);
+                    return DeserializeUInt64(bytes, startIndex);
                 case SerializedTypes.Int64:
-                    return DeserializeInt64(ref bytes, startIndex);
+                    return DeserializeInt64(bytes, startIndex);
                 case SerializedTypes.Single:
-                    return DeserializeSingle(ref bytes, startIndex);
+                    return DeserializeSingle(bytes, startIndex);
                 case SerializedTypes.Double:
-                    return DeserializeDouble(ref bytes, startIndex);
+                    return DeserializeDouble(bytes, startIndex);
                 case SerializedTypes.String:
-                    return DeserializeString(ref bytes, startIndex);
+                    return DeserializeString(bytes, startIndex);
                 case SerializedTypes.VRCPlayerApi:
-                    return DeserializeVRCPlayerApi(ref bytes, startIndex);
+                    return DeserializeVRCPlayerApi(bytes, startIndex);
                 case SerializedTypes.Color:
-                    return DeserializeColor(ref bytes, startIndex);
+                    return DeserializeColor(bytes, startIndex);
                 case SerializedTypes.Color32:
-                    return DeserializeColor32(ref bytes, startIndex);
+                    return DeserializeColor32(bytes, startIndex);
                 case SerializedTypes.Vector2:
-                    return DeserializeVector2(ref bytes, startIndex);
+                    return DeserializeVector2(bytes, startIndex);
                 case SerializedTypes.Vector2Int:
-                    return DeserializeVector2Int(ref bytes, startIndex);
+                    return DeserializeVector2Int(bytes, startIndex);
                 case SerializedTypes.Vector3:
-                    return DeserializeVector3(ref bytes, startIndex);
+                    return DeserializeVector3(bytes, startIndex);
                 case SerializedTypes.Vector3Int:
-                    return DeserializeVector3Int(ref bytes, startIndex);
+                    return DeserializeVector3Int(bytes, startIndex);
                 case SerializedTypes.Vector4:
-                    return DeserializeVector4(ref bytes, startIndex);
+                    return DeserializeVector4(bytes, startIndex);
                 case SerializedTypes.Quaternion:
-                    return DeserializeQuaternion(ref bytes, startIndex);
+                    return DeserializeQuaternion(bytes, startIndex);
                 case SerializedTypes.DateTime:
-                    return DeserializeDateTime(ref bytes, startIndex);
+                    return DeserializeDateTime(bytes, startIndex);
                 case SerializedTypes.Null:
                 case SerializedTypes.None:
                     return null;
@@ -336,8 +393,13 @@ namespace USPPNet {
             }
         }
 
-        public static object[] Deserialize(ref byte[] bytes) {
-            var serlSize = DeserializeUInt16(ref bytes, 0);
+        public static T[] Deserialize<T>(byte[] bytes) {
+            return ConvertAll<T, object>(Deserialize(bytes));
+        }
+
+        [RecursiveMethod]
+        public static object[] Deserialize(byte[] bytes) {
+            var serlSize = DeserializeUInt16(bytes, 0);
 
             var outputObjects = new object[serlSize];
             var byteIndex = 2;
@@ -345,27 +407,28 @@ namespace USPPNet {
             var objectIndex = 0;
 
             while (objectIndex < serlSize) {
-                var type = (SerializedTypes)DeserializeByte(ref bytes, byteIndex);
+                var type = (SerializedTypes)DeserializeByte(bytes, byteIndex);
 
                 if (type == SerializedTypes.Array) {
-                    var arrayLength = DeserializeUInt16(ref bytes, byteIndex + 4);
+                    var arrayByteSize = DeserializeUInt16(bytes, byteIndex + 1);
+                    var arrayBytes = SubArray(bytes, byteIndex + 3, arrayByteSize);
+                    outputObjects[objectIndex] = Deserialize(arrayBytes);
 
-                    outputObjects[objectIndex] = DeserializeArray(ref bytes, byteIndex + 1);
-                    byteIndex += 1 + arrayLength;
+                    byteIndex += 3 + arrayByteSize;
                     objectIndex++;
                     continue;
                 }
 
                 if (type == SerializedTypes.String) {
-                    var stringByteSize = DeserializeUInt16(ref bytes, byteIndex + 1) + 2;
-                    outputObjects[objectIndex] = DeserializeString(ref bytes, byteIndex + 1);
+                    var stringByteSize = DeserializeUInt16(bytes, byteIndex + 1) + 2;
+                    outputObjects[objectIndex] = DeserializeString(bytes, byteIndex + 1);
                     byteIndex += 1 + stringByteSize;
                     objectIndex++;
                     continue;
                 }
 
                 var byteSize = GetSizeFromType(type, null);
-                outputObjects[objectIndex] = DeserializeKnownType(ref bytes, type, byteIndex + 1);
+                outputObjects[objectIndex] = DeserializeKnownType(bytes, type, byteIndex + 1);
                 byteIndex += byteSize;
                 objectIndex++;
             }
@@ -373,33 +436,42 @@ namespace USPPNet {
             return outputObjects;
         }
 
-        public static bool DeserializeBool(ref byte[] bytes, int startIndex) => BitConverter.ToBoolean(bytes, startIndex);
+        public static bool DeserializeBool(byte[] bytes, int startIndex) =>
+            BitConverter.ToBoolean(bytes, startIndex);
 
 
-        public static byte DeserializeByte(ref byte[] bytes, int startIndex) => bytes[startIndex];
+        public static byte DeserializeByte(byte[] bytes, int startIndex) => bytes[startIndex];
 
 
-        public static sbyte DeserializeSByte(ref byte[] bytes, int startIndex) => Convert.ToSByte(bytes[startIndex] + sbyte.MinValue);
+        public static sbyte DeserializeSByte(byte[] bytes, int startIndex) =>
+            Convert.ToSByte(bytes[startIndex] + sbyte.MinValue);
 
 
-        public static short DeserializeInt16(ref byte[] bytes, int startIndex) => BitConverter.ToInt16(bytes, startIndex);
-        
-        public static int DeserializeInt32(ref byte[] bytes, int startIndex) => BitConverter.ToInt32(bytes, startIndex);
+        public static short DeserializeInt16(byte[] bytes, int startIndex) =>
+            BitConverter.ToInt16(bytes, startIndex);
 
-        public static long DeserializeInt64(ref byte[] bytes, int startIndex) => BitConverter.ToInt64(bytes, startIndex);
-        
-        public static ushort DeserializeUInt16(ref byte[] bytes, int startIndex) => BitConverter.ToUInt16(bytes, startIndex);
-        
-        public static uint DeserializeUInt32(ref byte[] bytes, int startIndex) => BitConverter.ToUInt32(bytes, startIndex);
-        
-        public static ulong DeserializeUInt64(ref byte[] bytes, int startIndex) => BitConverter.ToUInt64(bytes, startIndex);
+        public static int DeserializeInt32(byte[] bytes, int startIndex) => BitConverter.ToInt32(bytes, startIndex);
 
-        public static float DeserializeSingle(ref byte[] bytes, int startIndex) => BitConverter.ToSingle(bytes, startIndex);
-        
-        public static double DeserializeDouble(ref byte[] bytes, int startIndex) => BitConverter.ToDouble(bytes, startIndex);
+        public static long DeserializeInt64(byte[] bytes, int startIndex) =>
+            BitConverter.ToInt64(bytes, startIndex);
 
-        public static string DeserializeString(ref byte[] bytes, int startIndex) {
-            var stringByteSize = DeserializeUInt16(ref bytes, startIndex) + 2;
+        public static ushort DeserializeUInt16(byte[] bytes, int startIndex) =>
+            BitConverter.ToUInt16(bytes, startIndex);
+
+        public static uint DeserializeUInt32(byte[] bytes, int startIndex) =>
+            BitConverter.ToUInt32(bytes, startIndex);
+
+        public static ulong DeserializeUInt64(byte[] bytes, int startIndex) =>
+            BitConverter.ToUInt64(bytes, startIndex);
+
+        public static float DeserializeSingle(byte[] bytes, int startIndex) =>
+            BitConverter.ToSingle(bytes, startIndex);
+
+        public static double DeserializeDouble(byte[] bytes, int startIndex) =>
+            BitConverter.ToDouble(bytes, startIndex);
+
+        public static string DeserializeString(byte[] bytes, int startIndex) {
+            var stringByteSize = DeserializeUInt16(bytes, startIndex) + 2;
             var stopIndex = startIndex + stringByteSize;
             var charBuffer = new char[stringByteSize];
 
@@ -442,8 +514,8 @@ namespace USPPNet {
             return new string(newBuff);
         }
 
-        public static VRCPlayerApi DeserializeVRCPlayerApi(ref byte[] bytes, int startIndex) {
-            var playerBits = DeserializeUInt16(ref bytes, startIndex);
+        public static VRCPlayerApi DeserializeVRCPlayerApi(byte[] bytes, int startIndex) {
+            var playerBits = DeserializeUInt16(bytes, startIndex);
 
             if ((playerBits & 0x8000) != 0)
                 return default;
@@ -452,59 +524,60 @@ namespace USPPNet {
             return VRCPlayerApi.GetPlayerById(playerId);
         }
 
-        public static Color DeserializeColor(ref byte[] bytes, int startIndex) {
-            var r = DeserializeSingle(ref bytes, startIndex);
-            var g = DeserializeSingle(ref bytes, startIndex + 4);
-            var b = DeserializeSingle(ref bytes, startIndex + 8);
-            var a = DeserializeSingle(ref bytes, startIndex + 12);
+        public static Color DeserializeColor(byte[] bytes, int startIndex) {
+            var r = DeserializeSingle(bytes, startIndex);
+            var g = DeserializeSingle(bytes, startIndex + 4);
+            var b = DeserializeSingle(bytes, startIndex + 8);
+            var a = DeserializeSingle(bytes, startIndex + 12);
 
             return new Color(r, g, b, a);
         }
 
-        public static Color32 DeserializeColor32(ref byte[] bytes, int startIndex) => new Color32(bytes[0], bytes[1], bytes[2], bytes[3]);
+        public static Color32 DeserializeColor32(byte[] bytes, int startIndex) =>
+            new Color32(bytes[0], bytes[1], bytes[2], bytes[3]);
 
-        public static Vector2 DeserializeVector2(ref byte[] bytes, int startIndex) {
-            var x = DeserializeSingle(ref bytes, startIndex);
-            var y = DeserializeSingle(ref bytes, startIndex + 4);
+        public static Vector2 DeserializeVector2(byte[] bytes, int startIndex) {
+            var x = DeserializeSingle(bytes, startIndex);
+            var y = DeserializeSingle(bytes, startIndex + 4);
 
             return new Vector2(x, y);
         }
 
-        public static Vector2Int DeserializeVector2Int(ref byte[] bytes, int startIndex) {
-            var x = DeserializeInt32(ref bytes, startIndex);
-            var y = DeserializeInt32(ref bytes, startIndex + 4);
+        public static Vector2Int DeserializeVector2Int(byte[] bytes, int startIndex) {
+            var x = DeserializeInt32(bytes, startIndex);
+            var y = DeserializeInt32(bytes, startIndex + 4);
 
             return new Vector2Int(x, y);
         }
 
-        public static Vector3 DeserializeVector3(ref byte[] bytes, int startIndex) {
-            var x = DeserializeSingle(ref bytes, startIndex);
-            var y = DeserializeSingle(ref bytes, startIndex + 4);
-            var z = DeserializeSingle(ref bytes, startIndex + 8);
+        public static Vector3 DeserializeVector3(byte[] bytes, int startIndex) {
+            var x = DeserializeSingle(bytes, startIndex);
+            var y = DeserializeSingle(bytes, startIndex + 4);
+            var z = DeserializeSingle(bytes, startIndex + 8);
 
             return new Vector3(x, y, z);
         }
 
-        public static Vector3Int DeserializeVector3Int(ref byte[] bytes, int startIndex) {
-            var x = DeserializeInt32(ref bytes, startIndex);
-            var y = DeserializeInt32(ref bytes, startIndex + 4);
-            var z = DeserializeInt32(ref bytes, startIndex + 8);
+        public static Vector3Int DeserializeVector3Int(byte[] bytes, int startIndex) {
+            var x = DeserializeInt32(bytes, startIndex);
+            var y = DeserializeInt32(bytes, startIndex + 4);
+            var z = DeserializeInt32(bytes, startIndex + 8);
 
             return new Vector3Int(x, y, z);
         }
 
-        public static Vector4 DeserializeVector4(ref byte[] bytes, int startIndex) {
-            var x = DeserializeSingle(ref bytes, startIndex);
-            var y = DeserializeSingle(ref bytes, startIndex + 4);
-            var z = DeserializeSingle(ref bytes, startIndex + 8);
-            var w = DeserializeSingle(ref bytes, startIndex + 12);
+        public static Vector4 DeserializeVector4(byte[] bytes, int startIndex) {
+            var x = DeserializeSingle(bytes, startIndex);
+            var y = DeserializeSingle(bytes, startIndex + 4);
+            var z = DeserializeSingle(bytes, startIndex + 8);
+            var w = DeserializeSingle(bytes, startIndex + 12);
 
             return new Vector4(x, y, z, w);
         }
 
 
-        public static Quaternion DeserializeQuaternion(ref byte[] bytes, int startIndex) {
-            var deVec4 = DeserializeVector4(ref bytes, startIndex);
+        public static Quaternion DeserializeQuaternion(byte[] bytes, int startIndex) {
+            var deVec4 = DeserializeVector4(bytes, startIndex);
             return new Quaternion(
                 deVec4.x,
                 deVec4.y,
@@ -514,37 +587,8 @@ namespace USPPNet {
         }
 
 
-        public static DateTime DeserializeDateTime(ref byte[] bytes, int startIndex) => new DateTime(DeserializeInt64(ref bytes, startIndex));
-
-
-        public static Array DeserializeArray(ref byte[] bytes, int startIndex) {
-            var arrayType = (SerializedTypes)bytes[startIndex];
-
-            if (arrayType == SerializedTypes.Array)
-                return null;
-
-            var arrayLength = DeserializeUInt16(ref bytes, startIndex + 1);
-            var byteIndex = 5;
-
-            var newArray = Array.CreateInstance(GetTypeFromSerializedType(arrayType), arrayLength);
-            if (arrayType == SerializedTypes.String) {
-                for (var i = 0; i < arrayLength; i++) {
-                    var stringByteSize = DeserializeUInt16(ref bytes, startIndex + byteIndex) + 2;
-                    newArray.SetValue(DeserializeString(ref bytes, startIndex + byteIndex), i);
-
-                    byteIndex += stringByteSize;
-                }
-            }
-            else {
-                var typeSize = GetSizeFromType(arrayType, null) - 1;
-                for (var i = 0; i < arrayLength; i++) {
-                    newArray.SetValue(DeserializeKnownType(ref bytes, arrayType, startIndex + byteIndex), i);
-                    byteIndex += typeSize;
-                }
-            }
-
-            return newArray;
-        }
+        public static DateTime DeserializeDateTime(byte[] bytes, int startIndex) =>
+            new DateTime(DeserializeInt64(bytes, startIndex));
 
         #endregion
 
@@ -604,7 +648,8 @@ namespace USPPNet {
             }
         }
 
-        public static byte[] Serialize(object[] input) {
+        [RecursiveMethod]
+        public static byte[] Serialize(Array input) {
             var types = new SerializedTypes[input.Length];
             var isArray = new bool[input.Length];
             var sizes = new int[input.Length];
@@ -612,16 +657,20 @@ namespace USPPNet {
             var estimatedByteCount = 0;
 
             for (var i = 0; i < input.Length; i++) {
-                var currentObject = input[i];
-                var type = GetSerializedType(currentObject);
+                var currentObject = input.GetValue(i);
                 var array = IsArray(currentObject);
-                var size = GetSizeFromType(type, currentObject, array);
+                var type = GetSerializedType(currentObject, array);
+
+
+                var size = 0;
+                if (!array)
+                    size = GetSizeFromType(type, currentObject);
 
                 types[i] = type;
                 isArray[i] = array;
                 sizes[i] = size;
 
-                estimatedByteCount += size;
+                estimatedByteCount += size + 1;
             }
 
             var byteArray = new byte[estimatedByteCount + (int)TypeSizes.Int16];
@@ -633,18 +682,27 @@ namespace USPPNet {
 
             for (var i = 0; i < input.Length; i++) {
                 if (isArray[i]) {
-                    byteArray[byteIndex] = (byte)SerializedTypes.Array;
-                    var arrayBytes = SerializeArray((Array)input[i], types[i]);
+                    var arrayBytes = Serialize((Array)input.GetValue(i));
                     var arraySize = arrayBytes.Length;
 
-                    Array.Copy(arrayBytes, 0, byteArray, byteIndex + 1, arraySize);
-                    byteIndex += arraySize + 1;
+                    // Resize byte array to fit new array
+                    byteArray = ResizeArray(byteArray, byteArray.Length + arraySize + 2, byteIndex);
+
+                    // Serialized header info
+                    byteArray[byteIndex] = (byte)SerializedTypes.Array;
+
+                    var serializedArraySize = SerializeUInt16((ushort)arraySize);
+                    byteArray[byteIndex + 1] = serializedArraySize[0];
+                    byteArray[byteIndex + 2] = serializedArraySize[1];
+
+                    Array.Copy(arrayBytes, 0, byteArray, byteIndex + 3, arraySize);
+                    byteIndex += arraySize + 3;
                     continue;
                 }
 
                 if (types[i] == SerializedTypes.String) {
                     byteArray[byteIndex] = (byte)SerializedTypes.String;
-                    var stringBytes = SerializeString((string)input[i]);
+                    var stringBytes = SerializeString((string)input.GetValue(i));
                     var stringSize = stringBytes.Length;
                     Array.Copy(stringBytes, 0, byteArray, byteIndex + 1, stringSize);
 
@@ -655,13 +713,11 @@ namespace USPPNet {
                 byteArray[byteIndex] = (byte)((int)types[i] & 0xFF); // god, why udon
                 var byteSize = sizes[i];
 
-                var serializedBytes = SerializeKnownType(input[i], types[i]);
+                var serializedBytes = SerializeKnownType(input.GetValue(i), types[i]);
                 Array.Copy(serializedBytes, 0, byteArray, byteIndex + 1, byteSize - 1);
 
                 byteIndex += byteSize;
             }
-
-            //Debug.Log($"estimatedByteCount: {estimatedByteCount + 2}, actualMinifiedSize: {byteIndex}");
 
             var minifiedByteArray = SubArray(byteArray, 0, byteIndex);
             return minifiedByteArray;
@@ -678,22 +734,22 @@ namespace USPPNet {
 
 
         public static byte[] SerializeInt16(short input) => BitConverter.GetBytes(input);
-        
+
         public static byte[] SerializeInt32(int input) => BitConverter.GetBytes(input);
 
 
         public static byte[] SerializeInt64(long input) => BitConverter.GetBytes(input);
-        
+
         public static byte[] SerializeUInt16(ushort input) => BitConverter.GetBytes(input);
 
         public static byte[] SerializeUInt32(uint input) => BitConverter.GetBytes(input);
-        
+
         public static byte[] SerializeUInt64(ulong input) => BitConverter.GetBytes(input);
 
         public static byte[] SerializeSingle(float input) => BitConverter.GetBytes(input);
 
         public static byte[] SerializeDouble(double input) => BitConverter.GetBytes(input);
-        
+
         public static byte[] SerializeString(string inputString) {
             var buffSize = 0;
             var buffer = new byte[inputString.Length * 4];
@@ -820,43 +876,6 @@ namespace USPPNet {
 
 
         public static byte[] SerializeDateTime(DateTime input) => SerializeInt64(input.Ticks);
-
-        public static byte[] SerializeArray(Array input, SerializedTypes arrayType) {
-            if (arrayType == SerializedTypes.Array)
-                return new[] { (byte)arrayType };
-
-            var bytes = new byte[GetSizeFromType(arrayType, input, true) - 1];
-
-            bytes[0] = (byte)((int)arrayType & 0xFF);
-            Array.Copy(SerializeUInt16((ushort)input.Length), 0, bytes, 1, 2);
-
-            var byteIndex = 5;
-            if (arrayType == SerializedTypes.String) // handle strings separately
-            {
-                for (var i = 0; i < input.Length; i++) {
-                    var currentString = (string)input.GetValue(i);
-                    var serializedString = SerializeString(currentString);
-
-                    var stringSize = serializedString.Length;
-                    Array.Copy(serializedString, 0, bytes, byteIndex, stringSize);
-                    byteIndex += stringSize;
-                }
-
-                var newByteArray = new byte[byteIndex];
-                Array.Copy(bytes, 0, newByteArray, 0, byteIndex);
-                Array.Copy(SerializeUInt16((ushort)byteIndex), 0, newByteArray, 3, 2);
-                return newByteArray;
-            }
-
-            var typeSize = GetSizeFromType(arrayType, input) - 1;
-            for (var i = 0; i < input.Length; i++) {
-                Array.Copy(SerializeKnownType(input.GetValue(i), arrayType), 0, bytes, byteIndex, typeSize);
-                byteIndex += typeSize;
-            }
-
-            Array.Copy(SerializeUInt16((ushort)byteIndex), 0, bytes, 3, 2);
-            return bytes;
-        }
 
         #endregion
     }
