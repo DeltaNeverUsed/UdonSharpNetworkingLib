@@ -1,7 +1,7 @@
 {
   "name": "deltaneverused.udonsharpnetworkinglibrary",
   "displayName": "UdonSharp Networking Library",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-alpha.2",
   "description": "Networking library",
   "gitDependencies": {},
   "vpmDependencies": {
