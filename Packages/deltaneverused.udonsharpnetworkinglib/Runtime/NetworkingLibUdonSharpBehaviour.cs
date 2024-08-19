@@ -12,9 +12,8 @@ namespace UdonSharpNetworkingLib {
 
         /// <summary>
         /// [0] Function ID: Int
-        /// [1] NetworkingTarget: NetworkingTarget as byte
-        /// [2] Params: object[] serialized as a byte array
-        /// [3*] PlayerTarget
+        /// [1] Params: object[] serialized as a byte array
+        /// [2*] PlayerTarget
         ///
         /// * Depends on current Network Target Mode
         /// </summary>
@@ -24,6 +23,12 @@ namespace UdonSharpNetworkingLib {
 
         private bool _serializationRequired;
 
+        /// <summary>
+        /// Call a networked function.
+        /// </summary>
+        /// <param name="methodName">Target function, please use nameof(function)</param>
+        /// <param name="target">The target player, only used for target type <see cref="UdonSharpNetworkingLib.NetworkingTargetType.Specific"/> set to <see langword="null" /> otherwise</param>
+        /// <param name="args">Function arguments</param>
         public void NetworkingLib_RPC(string methodName, VRCPlayerApi target = null, params object[] args) {
             var functions = (string[])GetProgramVariable(FunctionListKey);
 
@@ -54,66 +59,85 @@ namespace UdonSharpNetworkingLib {
                 }
             }
 
-            if (networkType == (byte)NetworkingTargetType.Local) {
-                NetworkingLib_FunctionCall((ushort)functionId, args);
-                return;
+            switch (networkType) {
+                case (byte)NetworkingTargetType.Local:
+                case (byte)NetworkingTargetType.Master when Networking.LocalPlayer.isMaster:
+                    NetworkingLib_FunctionCall((ushort)functionId, args);
+                    return;
+                case (byte)NetworkingTargetType.All:
+                    NetworkingLib_FunctionCall((ushort)functionId, args);
+                    break;
             }
-            
-            if (networkType == (byte)NetworkingTargetType.All)
-                NetworkingLib_FunctionCall((ushort)functionId, args);
 
-            var dataArray = new object[isExtended ? 4 : 3];
+            var dataArray = new object[isExtended ? 3 : 2];
 
             dataArray[0] = (ushort)functionId;
-            dataArray[1] = networkType;
-            dataArray[2] = Serializer.Serialize(args);
+            dataArray[1] = args;
 
             if (isExtended) {
-                dataArray[3] = target.playerId;
+                dataArray[2] = target.playerId;
             }
 
             _callLen += dataArray.Length;
             _calls.Add(new DataToken(dataArray));
+
+            _serializationRequired = true;
             RequestSerialization();
         }
 
         public override void OnDeserialization(DeserializationResult result) {
-            if (result.sendTime - Time.realtimeSinceStartup > 8)
+            if (Time.realtimeSinceStartup - result.sendTime > 8)
                 return;
+            HandleDeserialization();
+        }
 
-            var calls = Serializer.Deserialize(ref _data);
+        private void HandleDeserialization() {
+            if (_data.Length == 0)
+                return;
+            var calls = Serializer.Deserialize(_data);
 
             var functionIndex = 0;
             while (functionIndex < calls.Length) {
-                var targetType = (NetworkingTargetType)calls[functionIndex + 1];
+                var inc = 2;
+                var targetType = ((byte[])GetProgramVariable(NetworkingTypeKey))[(ushort)calls[functionIndex]];
                 // Check the networking types for the current function we're processing
                 switch (targetType) {
-                    case NetworkingTargetType.All:
-                    case NetworkingTargetType.AllSelfExclusive:
+                    case (byte)NetworkingTargetType.All:
+                    case (byte)NetworkingTargetType.AllSelfExclusive:
                         break;
-                    case NetworkingTargetType.Master:
-                        if (!Networking.LocalPlayer.isMaster)
+                    case (byte)NetworkingTargetType.Master:
+                        if (!Networking.LocalPlayer.isMaster) {
+                            functionIndex += inc;
                             continue;
+                        }
+
                         break;
-                    case NetworkingTargetType.Specific:
-                        if (Networking.LocalPlayer != calls[functionIndex + 3])
+                    case (byte)NetworkingTargetType.Specific:
+                        inc++;
+                        if (Networking.LocalPlayer != calls[functionIndex + 2]) {
+                            functionIndex += inc;
                             continue;
+                        }
+
                         break;
-                    case NetworkingTargetType.Local:
                     default:
                         Debug.LogWarning("Invalid network type got");
+                        functionIndex += inc;
                         continue;
                 }
+
                 // Call function if previews checks in switch don't fail
-                var para = (byte[])calls[functionIndex + 2];
-                NetworkingLib_FunctionCall(_data[functionIndex], Serializer.Deserialize(ref para));
+                var para = (object[])calls[functionIndex + 1];
+                NetworkingLib_FunctionCall((ushort)calls[functionIndex], para);
+
+                functionIndex += inc;
             }
-            
         }
 
         public override void OnPreSerialization() {
             if (!_serializationRequired)
                 return;
+            _serializationRequired = false;
 
             // Copying all the stuff out of the individual object arrays into one big object array
             var objectCalls = new object[_callLen];
@@ -135,6 +159,10 @@ namespace UdonSharpNetworkingLib {
             _data = new byte[0];
         }
 
-        protected virtual void NetworkingLib_FunctionCall(ushort functionId, params object[] parameters) { }
+        /// <summary>
+        /// Do not override!
+        /// This function is used internally for calling the functions and is generated at compile time.
+        /// </summary>
+        protected virtual void NetworkingLib_FunctionCall(ushort functionId, object[] parameters) { }
     }
 }
