@@ -30,6 +30,10 @@ namespace UdonSharpNetworkingLib {
         /// <param name="target">The target player, only used for target type <see cref="UdonSharpNetworkingLib.NetworkingTargetType.Specific"/> set to <see langword="null" /> otherwise</param>
         /// <param name="args">Function arguments</param>
         public void NetworkingLib_RPC(string methodName, VRCPlayerApi target = null, params object[] args) {
+            if (!Networking.IsOwner(gameObject)) {
+                Debug.LogError("Can't make RPC call if local player isn't the owner of the object.");
+                return;
+            }
             var functions = (string[])GetProgramVariable(FunctionListKey);
 
             var paramTypeNames = "_";
