@@ -150,7 +150,7 @@ namespace UdonSharpNetworkingLib {
         }
 
         // ReSharper disable once PossibleNullReferenceException
-        public static bool IsArray(object input) => Utilities.IsValid(input) && input.GetType().FullName.EndsWith("[]");
+        public static bool IsArray(object input) => Utilities.IsValid(input) && input.GetType().Name.EndsWith("[]");
 
         public static Type GetTypeFromSerializedType(SerializedTypes type) {
             switch (type) {
@@ -597,6 +597,8 @@ namespace UdonSharpNetworkingLib {
 
         public static byte[] SerializeKnownType(object input, SerializedTypes type) {
             switch (type) {
+                case SerializedTypes.Array:
+                    return Serialize((Array)input);
                 case SerializedTypes.Boolean:
                     return SerializeBool((bool)input);
                 case SerializedTypes.SByte:
@@ -650,21 +652,22 @@ namespace UdonSharpNetworkingLib {
 
         [RecursiveMethod]
         public static byte[] Serialize(Array input) {
+            var inputSize = input.Length;
+            
             var currentArrayLen = 512;
             var arrayIncSize = 512;
             var byteArray = new byte[currentArrayLen];
-            var serlSize = SerializeUInt16((ushort)input.Length);
+            var serlSize = SerializeUInt16((ushort)inputSize);
             byteArray[0] = serlSize[0];
             byteArray[1] = serlSize[1];
 
             var byteIndex = 2;
 
-            for (var i = 0; i < input.Length; i++) {
+            for (var i = 0; i < inputSize; i++) {
                 var arrayFreeSpace = currentArrayLen - byteIndex;
                 
                 var currentObject = input.GetValue(i);
                 var isArray = IsArray(currentObject);
-                var type = GetSerializedType(currentObject, isArray);
                 
                 if (isArray) {
                     var arrayBytes = Serialize((Array)currentObject);
@@ -672,7 +675,7 @@ namespace UdonSharpNetworkingLib {
 
                     // Resize byte array to fit new array
                     var diff = arraySize - arrayFreeSpace;
-                    if (diff > -1) {
+                    if (diff > -5) {
                         currentArrayLen += arrayIncSize * (int)Mathf.Ceil(diff / (float)arrayIncSize);
                         byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                     }
@@ -688,6 +691,8 @@ namespace UdonSharpNetworkingLib {
                     byteIndex += arraySize + 3;
                     continue;
                 }
+                
+                var type = GetSerializedType(currentObject, false);
 
                 if (type == SerializedTypes.String) {
                     byteArray[byteIndex] = (byte)SerializedTypes.String;
@@ -695,7 +700,7 @@ namespace UdonSharpNetworkingLib {
                     var stringSize = stringBytes.Length;
                     
                     var diff = stringSize - arrayFreeSpace;
-                    if (diff < 0) {
+                    if (diff < -2) {
                         currentArrayLen += arrayIncSize * (int)Mathf.Ceil(diff / (float)arrayIncSize);
                         byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                     }
@@ -706,17 +711,17 @@ namespace UdonSharpNetworkingLib {
                     continue;
                 }
 
-                byteArray[byteIndex] = (byte)((int)type & 0xFF); // god, why udon
-
                 var serializedBytes = SerializeKnownType(currentObject, type);
-                var byteSize = serializedBytes.Length;
+                var byteSize = serializedBytes.Length + 1;
                 
                 if (arrayFreeSpace < byteSize) {
                     currentArrayLen += arrayIncSize;
                     byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                 }
                 
-                Array.Copy(serializedBytes, 0, byteArray, byteIndex + 1, byteSize);
+                byteArray[byteIndex] = (byte)((int)type & 0xFF); // god, why udon
+                
+                Array.Copy(serializedBytes, 0, byteArray, byteIndex + 1, byteSize - 1);
                 byteIndex += byteSize;
             }
 
@@ -788,7 +793,9 @@ namespace UdonSharpNetworkingLib {
             }
 
             var newBuff = new byte[buffSize + 2];
-            Array.Copy(SerializeUInt16((ushort)buffSize), newBuff, 2); // place array length as uint16 in first
+            var stringSize = SerializeUInt16((ushort)buffSize);
+            newBuff[0] = stringSize[0];
+            newBuff[1] = stringSize[1];
             Array.Copy(buffer, 0, newBuff, 2, buffSize);
             return newBuff;
         }
