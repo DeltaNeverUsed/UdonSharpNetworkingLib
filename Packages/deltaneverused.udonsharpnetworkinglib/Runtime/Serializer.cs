@@ -23,7 +23,7 @@ namespace UdonSharpNetworkingLib {
      *      1 - 16 bytes: content
      */
 
-    public enum SerializedTypes {
+    public enum SerializedTypes : byte {
         None,
 
         Boolean,
