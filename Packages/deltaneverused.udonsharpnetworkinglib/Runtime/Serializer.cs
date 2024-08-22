@@ -23,7 +23,7 @@ namespace UdonSharpNetworkingLib {
      *      1 - 16 bytes: content
      */
 
-    public enum SerializedTypes : byte {
+    public enum SerializedTypes {
         None,
 
         Boolean,
@@ -95,10 +95,10 @@ namespace UdonSharpNetworkingLib {
             return tempArray;
         }
 
-        public static T[] ConvertAll<T, U>(U[] array) {
+        public static T[] ConvertAll<T, U>(Array array) {
             var newArray = new T[array.Length];
             for (var i = 0; i < array.Length; i++) {
-                newArray[i] = (T)(object)array[i];
+                newArray[i] = (T)array.GetValue(i);
             }
 
             return newArray;

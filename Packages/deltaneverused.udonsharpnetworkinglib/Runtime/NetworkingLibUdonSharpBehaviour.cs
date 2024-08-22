@@ -65,7 +65,11 @@ namespace UdonSharpNetworkingLib {
 
             switch (networkType) {
                 case (byte)NetworkingTargetType.Local:
-                case (byte)NetworkingTargetType.Master when Networking.LocalPlayer.isMaster:
+                    NetworkingLib_FunctionCall((ushort)functionId, args);
+                    return;
+                case (byte)NetworkingTargetType.Master:
+                    if (!Networking.IsMaster)
+                        break;
                     NetworkingLib_FunctionCall((ushort)functionId, args);
                     return;
                 case (byte)NetworkingTargetType.All:

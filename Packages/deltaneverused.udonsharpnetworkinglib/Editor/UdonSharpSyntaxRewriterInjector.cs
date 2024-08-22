@@ -125,7 +125,7 @@ namespace UdonSharpNetworkingLib {
                 for (var paramIndex = 0; paramIndex < method.ParameterList.Parameters.Count; paramIndex++) {
                     if (paramIndex != 0)
                         sb.Append(',');
-                    
+
                     var currentParam = paramTypes[paramIndex];
                     var isArray = currentParam.Contains("[]");
 
@@ -154,11 +154,12 @@ namespace UdonSharpNetworkingLib {
             }
 
             sb.AppendLine("default:");
+            sb.AppendLine("base.NetworkingLib_FunctionCall(functionId, parameters);");
             sb.AppendLine("break;");
 
             sb.AppendLine("}");
             sb.AppendLine("}");
-            
+
             return SyntaxFactory.MethodDeclaration(
                     SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
                     SyntaxFactory.Identifier("NetworkingLib_FunctionCall"))
@@ -257,9 +258,15 @@ namespace UdonSharpNetworkingLib {
                             }
                         }
 
-                        var methodAndTypeNames = networkedMethods.Select(m => m.Identifier + "_" + m.ParameterList
-                            .Parameters.Select(p => GetRuntimeTypeName(p.Type)?.ToString())
-                            .Aggregate((current, next) => current + next)).ToArray();
+                        var methodAndTypeNames = networkedMethods.Select(m => m.Identifier + "_" +
+                                                                              (m.ParameterList.Parameters.Any()
+                                                                                  ? m.ParameterList
+                                                                                      .Parameters.Select(p =>
+                                                                                          GetRuntimeTypeName(p.Type)
+                                                                                              ?.ToString())
+                                                                                      .Aggregate((current, next) =>
+                                                                                          current + next)
+                                                                                  : "")).ToArray();
 
                         var newClassDeclaration = classDeclaration
                             .AddMembers(
@@ -274,8 +281,7 @@ namespace UdonSharpNetworkingLib {
                     Injections.PrintError("Root was null?");
                 }
             }
-
-            return base.Visit(node);
+            return node;
         }
     }
 }
