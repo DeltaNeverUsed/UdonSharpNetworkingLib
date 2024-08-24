@@ -36,12 +36,15 @@ namespace UdonSharpNetworkingLib {
             }
             var functions = (string[])GetProgramVariable(FunctionListKey);
 
-            var paramTypeNames = "_";
-            foreach (var param in args) {
-                paramTypeNames += param.GetType().Name;
+            var paramTypeNames = new string[args.Length * 2];
+            for (var index = 0; index < args.Length; index++) {
+                var param = args[index];
+                var arrayIndex = index * 2;
+                paramTypeNames[arrayIndex] = "_";
+                paramTypeNames[arrayIndex+1] = param.GetType().Name;
             }
 
-            var functionDefinition = methodName + paramTypeNames;
+            var functionDefinition = methodName + string.Concat(paramTypeNames);
 
             var functionId = Array.IndexOf(functions, functionDefinition);
             if (functionId == -1) {
@@ -94,10 +97,12 @@ namespace UdonSharpNetworkingLib {
         }
 
         public override void OnDeserialization(DeserializationResult result) {
+            OnDeserializationBeforeNet();
+            OnDeserializationBeforeNet(result);
             if (Time.realtimeSinceStartup - result.sendTime < 8)
                 HandleDeserialization();
-            NewOnDeserialization();
-            NewOnDeserialization(result);
+            OnDeserializationAfterNet();
+            OnDeserializationAfterNet(result);
         }
 
         private void HandleDeserialization() {
@@ -123,7 +128,7 @@ namespace UdonSharpNetworkingLib {
                         break;
                     case (byte)NetworkingTargetType.Specific:
                         inc++;
-                        if (Networking.LocalPlayer != calls[functionIndex + 2]) {
+                        if (Networking.LocalPlayer.playerId != (int)calls[functionIndex + 2]) {
                             functionIndex += inc;
                             continue;
                         }
@@ -144,8 +149,9 @@ namespace UdonSharpNetworkingLib {
         }
 
         public override void OnPreSerialization() {
+            OnPreSerializationBeforeNet();
             HandlePreSerialization();
-            NewOnPreSerialization();
+            OnPreSerializationAfterNet();
         }
 
         private void HandlePreSerialization() {
@@ -170,14 +176,19 @@ namespace UdonSharpNetworkingLib {
         }
 
         public override void OnPostSerialization(SerializationResult result) {
+            OnPostSerializationBeforeNet(result);
             _data = new byte[0];
-            NewOnPostSerialization(result);
+            OnPostSerializationAfterNet(result);
         }
 
-        public virtual void NewOnDeserialization() { }
-        public virtual void NewOnDeserialization(DeserializationResult result) { }
-        public virtual void NewOnPreSerialization() { }
-        public virtual void NewOnPostSerialization(SerializationResult result) { }
+        public virtual void OnDeserializationBeforeNet() { }
+        public virtual void OnDeserializationAfterNet() { }
+        public virtual void OnDeserializationBeforeNet(DeserializationResult result) { }
+        public virtual void OnDeserializationAfterNet(DeserializationResult result) { }
+        public virtual void OnPreSerializationBeforeNet() { }
+        public virtual void OnPreSerializationAfterNet() { }
+        public virtual void OnPostSerializationBeforeNet(SerializationResult result) { }
+        public virtual void OnPostSerializationAfterNet(SerializationResult result) { }
 
         /// <summary>
         /// Do not override!

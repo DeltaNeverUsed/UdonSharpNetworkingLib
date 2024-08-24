@@ -431,7 +431,7 @@ namespace UdonSharpNetworkingLib {
         private static void TestSerializerArray() {
             int[] inputArray = { 1, 2, 3, 4, 5 };
             var serialized = Serializer.Serialize(inputArray);
-            var result = Serializer.Deserialize<int>(serialized);
+            var result = Serializer.DeserializeCast<int>(serialized);
 
             if (result == null || !Extensions.IsArraySame(inputArray, result)) {
                 Debug.Log(

@@ -258,11 +258,11 @@ namespace UdonSharpNetworkingLib {
                             }
                         }
 
-                        var methodAndTypeNames = networkedMethods.Select(m => m.Identifier + "_" +
+                        var methodAndTypeNames = networkedMethods.Select(m => m.Identifier +
                                                                               (m.ParameterList.Parameters.Any()
                                                                                   ? m.ParameterList
                                                                                       .Parameters.Select(p =>
-                                                                                          GetRuntimeTypeName(p.Type)
+                                                                                          "_" +GetRuntimeTypeName(p.Type)
                                                                                               ?.ToString())
                                                                                       .Aggregate((current, next) =>
                                                                                           current + next)
@@ -275,6 +275,7 @@ namespace UdonSharpNetworkingLib {
                                 CreateFunctionCallMethod(networkedMethods)
                             );
                         node = _root.ReplaceNode(classDeclaration, newClassDeclaration);
+                        Debug.Log(node.ToString());
                     }
                 }
                 else {

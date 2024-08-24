@@ -146,6 +146,10 @@ namespace UdonSharpNetworkingLib {
 
             if (type == SerializedTypes.String)
                 return ((string)input).Length * 4 + (int)TypeSizes.Byte;
+            if ((int)type >= map.Length || (int)type < 0) {
+                Debug.Log($"What is happening here? " + type);
+                return (int)TypeSizes.Byte;
+            }
             return (int)map[(int)type] + (int)TypeSizes.Byte;
         }
 
@@ -363,8 +367,6 @@ namespace UdonSharpNetworkingLib {
                     return DeserializeSingle(bytes, startIndex);
                 case SerializedTypes.Double:
                     return DeserializeDouble(bytes, startIndex);
-                case SerializedTypes.String:
-                    return DeserializeString(bytes, startIndex);
                 case SerializedTypes.VRCPlayerApi:
                     return DeserializeVRCPlayerApi(bytes, startIndex);
                 case SerializedTypes.Color:
@@ -385,6 +387,7 @@ namespace UdonSharpNetworkingLib {
                     return DeserializeQuaternion(bytes, startIndex);
                 case SerializedTypes.DateTime:
                     return DeserializeDateTime(bytes, startIndex);
+                case SerializedTypes.String:
                 case SerializedTypes.Null:
                 case SerializedTypes.None:
                     return null;
@@ -393,7 +396,7 @@ namespace UdonSharpNetworkingLib {
             }
         }
 
-        public static T[] Deserialize<T>(byte[] bytes) {
+        public static T[] DeserializeCast<T>(byte[] bytes) {
             return ConvertAll<T, object>(Deserialize(bytes));
         }
 
@@ -436,8 +439,7 @@ namespace UdonSharpNetworkingLib {
             return outputObjects;
         }
 
-        public static bool DeserializeBool(byte[] bytes, int startIndex) =>
-            BitConverter.ToBoolean(bytes, startIndex);
+        public static bool DeserializeBool(byte[] bytes, int startIndex) => bytes[startIndex] != 0;
 
 
         public static byte DeserializeByte(byte[] bytes, int startIndex) => bytes[startIndex];
@@ -471,8 +473,9 @@ namespace UdonSharpNetworkingLib {
             BitConverter.ToDouble(bytes, startIndex);
 
         public static string DeserializeString(byte[] bytes, int startIndex) {
-            var stringByteSize = DeserializeUInt16(bytes, startIndex) + 2;
-            var stopIndex = startIndex + stringByteSize;
+            var stringByteSize = DeserializeUInt16(bytes, startIndex);
+            
+            var stopIndex = startIndex + 2 + stringByteSize;
             var charBuffer = new char[stringByteSize];
 
             var charIndex = 0;
@@ -668,7 +671,7 @@ namespace UdonSharpNetworkingLib {
                 
                 var currentObject = input.GetValue(i);
                 var isArray = IsArray(currentObject);
-                
+                                
                 if (isArray) {
                     var arrayBytes = Serialize((Array)currentObject);
                     var arraySize = arrayBytes.Length;
@@ -695,15 +698,16 @@ namespace UdonSharpNetworkingLib {
                 var type = GetSerializedType(currentObject, false);
 
                 if (type == SerializedTypes.String) {
-                    byteArray[byteIndex] = (byte)SerializedTypes.String;
                     var stringBytes = SerializeString((string)currentObject);
                     var stringSize = stringBytes.Length;
                     
                     var diff = stringSize - arrayFreeSpace;
-                    if (diff < -2) {
+                    if (diff < -4) {
                         currentArrayLen += arrayIncSize * (int)Mathf.Ceil(diff / (float)arrayIncSize);
                         byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                     }
+                    
+                    byteArray[byteIndex] = (byte)SerializedTypes.String;
                     
                     Array.Copy(stringBytes, 0, byteArray, byteIndex + 1, stringSize);
 
@@ -729,7 +733,7 @@ namespace UdonSharpNetworkingLib {
         }
 
 
-        public static byte[] SerializeBool(bool input) => BitConverter.GetBytes(input);
+        public static byte[] SerializeBool(bool input) => input ? new byte[] {1} : new byte[] {0};
 
 
         public static byte[] SerializeByte(byte input) => new[] { input };
@@ -794,8 +798,8 @@ namespace UdonSharpNetworkingLib {
 
             var newBuff = new byte[buffSize + 2];
             var stringSize = SerializeUInt16((ushort)buffSize);
-            newBuff[0] = stringSize[0];
-            newBuff[1] = stringSize[1];
+            
+            Array.Copy(stringSize,newBuff, 2);
             Array.Copy(buffer, 0, newBuff, 2, buffSize);
             return newBuff;
         }
