@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: SerializerTests
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 538e374370e013742bdd2b36087bd4ff, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: a681c61cb845bcd4382e6d24a34a4446,
+    type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: abe24dd134577894dbd24d5fdd553214, type: 3}

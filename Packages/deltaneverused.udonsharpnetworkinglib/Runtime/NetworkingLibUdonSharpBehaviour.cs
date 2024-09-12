@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
@@ -17,12 +18,12 @@ namespace UdonSharpNetworkingLib {
         ///
         /// * Depends on current Network Target Mode
         /// </summary>
-        private DataList _calls = new DataList();
+        private object[] _calls = Array.Empty<object>();
 
         private int _callLen = 0;
 
         private bool _serializationRequired;
-
+        
         /// <summary>
         /// Call a networked function.
         /// </summary>
@@ -75,25 +76,26 @@ namespace UdonSharpNetworkingLib {
                         break;
                     NetworkingLib_FunctionCall((ushort)functionId, args);
                     return;
-                case (byte)NetworkingTargetType.All:
-                    NetworkingLib_FunctionCall((ushort)functionId, args);
-                    break;
             }
 
-            var dataArray = new object[isExtended ? 3 : 2];
+            var dataLen = isExtended ? 3 : 2;
+            
+            _calls = Serializer.ResizeArray(_calls, _calls.Length + dataLen, _calls.Length);
 
-            dataArray[0] = (ushort)functionId;
-            dataArray[1] = args;
-
+            _calls[_callLen] = (ushort)functionId;
+            _calls[_callLen + 1] = args.Clone();
             if (isExtended) {
-                dataArray[2] = target.playerId;
+                _calls[_callLen + 2] = target.playerId;
             }
-
-            _callLen += dataArray.Length;
-            _calls.Add(new DataToken(dataArray));
-
+            
+            _callLen += dataLen;
+            
             _serializationRequired = true;
             RequestSerialization();
+            
+            if (networkType == (byte)NetworkingTargetType.All) {
+                NetworkingLib_FunctionCall((ushort)functionId, args);
+            }
         }
 
         public override void OnDeserialization(DeserializationResult result) {
@@ -109,7 +111,7 @@ namespace UdonSharpNetworkingLib {
             if (_data.Length == 0)
                 return;
             var calls = Serializer.Deserialize(_data);
-
+            
             var functionIndex = 0;
             while (functionIndex < calls.Length) {
                 var inc = 2;
@@ -154,25 +156,19 @@ namespace UdonSharpNetworkingLib {
             OnPreSerializationAfterNet();
         }
 
+        /// <summary>
+        /// Handle pre-serialization for the networking library
+        /// </summary>
+
         private void HandlePreSerialization() {
             if (!_serializationRequired)
                 return;
             _serializationRequired = false;
-
-            // Copying all the stuff out of the individual object arrays into one big object array
-            var objectCalls = new object[_callLen];
-            var currentIndex = 0;
-            var callsArray = _calls.ToArray();
-            foreach (var call in callsArray) {
-                var callArray = (object[])call.Reference;
-                Array.Copy(callArray, 0, objectCalls, currentIndex, callArray.Length);
-                currentIndex += callArray.Length;
-            }
-
-            _data = Serializer.Serialize(objectCalls);
+            
+            _data = Serializer.Serialize(_calls);
 
             _callLen = 0;
-            _calls = new DataList();
+            _calls = new object[0];
         }
 
         public override void OnPostSerialization(SerializationResult result) {

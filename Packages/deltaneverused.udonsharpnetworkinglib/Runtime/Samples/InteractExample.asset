@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: InteractExample
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: ddebc3195f271004b8589460a18a15be, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 7264763b482858947981959aa08e5e13,
+    type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: eb10ad59a4302cd4298f39186aef2583, type: 3}
@@ -121,7 +122,7 @@ MonoBehaviour:
       Data: 7|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: VRC.SDK3.Data.DataList, VRCSDK3
+      Data: System.Object[], mscorlib
     - Name: 
       Entry: 8
       Data: 

@@ -275,7 +275,6 @@ namespace UdonSharpNetworkingLib {
                                 CreateFunctionCallMethod(networkedMethods)
                             );
                         node = _root.ReplaceNode(classDeclaration, newClassDeclaration);
-                        Debug.Log(node.ToString());
                     }
                 }
                 else {
