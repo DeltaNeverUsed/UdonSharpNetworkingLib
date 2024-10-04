@@ -677,9 +677,9 @@ namespace UdonSharpNetworkingLib {
                     var arraySize = arrayBytes.Length;
 
                     // Resize byte array to fit new array
-                    var diff = arraySize - arrayFreeSpace;
-                    if (diff > -5) {
-                        currentArrayLen += arrayIncSize * (int)Mathf.Ceil(diff / (float)arrayIncSize);
+                    var fullSize = arraySize + 10;
+                    if (arrayFreeSpace < fullSize) {
+                        currentArrayLen += arrayIncSize * (int)Mathf.Ceil(fullSize / (float)arrayIncSize);
                         byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                     }
 
@@ -701,9 +701,9 @@ namespace UdonSharpNetworkingLib {
                     var stringBytes = SerializeString((string)currentObject);
                     var stringSize = stringBytes.Length;
                     
-                    var diff = stringSize - arrayFreeSpace;
-                    if (diff < -4) {
-                        currentArrayLen += arrayIncSize * (int)Mathf.Ceil(diff / (float)arrayIncSize);
+                    var fullSize = stringSize + 10;
+                    if (arrayFreeSpace < fullSize) {
+                        currentArrayLen += arrayIncSize * (int)Mathf.Ceil(fullSize / (float)arrayIncSize);
                         byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                     }
                     
@@ -718,7 +718,7 @@ namespace UdonSharpNetworkingLib {
                 var serializedBytes = SerializeKnownType(currentObject, type);
                 var byteSize = serializedBytes.Length + 1;
                 
-                if (arrayFreeSpace < byteSize) {
+                if (arrayFreeSpace < byteSize+5) {
                     currentArrayLen += arrayIncSize;
                     byteArray = ResizeArray(byteArray, currentArrayLen, byteIndex);
                 }
