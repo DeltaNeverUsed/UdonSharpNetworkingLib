@@ -50,6 +50,7 @@ namespace UdonSharpNetworkingLib {
             var functionId = Array.IndexOf(functions, functionDefinition);
             if (functionId == -1) {
                 Debug.LogError($"An invalid function of definition \"{functionDefinition}\" was called but not found.");
+                Debug.LogError($"Available functions were: {string.Join(", ", functions)}");
                 return;
             }
 

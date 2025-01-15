@@ -222,11 +222,18 @@ namespace UdonSharpNetworkingLib {
                 _root = node as CompilationUnitSyntax;
 
                 if (_root != null) {
+                    var namespaceNode = _root.DescendantNodes()
+                        .OfType<NamespaceDeclarationSyntax>()
+                        .FirstOrDefault();
+                    var ns = namespaceNode == null ? "" : namespaceNode.Name.ToString();
                     var classDeclarations = _root.DescendantNodes().OfType<ClassDeclarationSyntax>();
 
                     foreach (var classDeclaration in classDeclarations) {
-                        var inheritsFromBaseClass = classDeclaration.BaseList?.Types
-                            .Any(baseType => baseType.ToString() == "NetworkingLibUdonSharpBehaviour") ?? false;
+                        if (classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
+                            continue;
+                        
+                        var classType = ReflectionHelper.ByName($"{ns}.{classDeclaration.Identifier.ToString()}");
+                        var inheritsFromBaseClass = classType != null && typeof(NetworkingLibUdonSharpBehaviour).IsAssignableFrom(classType);
                         if (!inheritsFromBaseClass) continue; // Skip if it's not a NetworkingLibUdonSharpBehaviour
 
                         var networkedMethods = _root
