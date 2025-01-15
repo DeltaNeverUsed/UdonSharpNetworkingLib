@@ -58,8 +58,9 @@ namespace UdonSharpNetworkingLib {
                     SyntaxFactory.Literal(b)));
                 initializerVars.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
             }
-
-            initializerVars.RemoveAt(initializerVars.Count - 1);
+            
+            if (initializerVars.Count > 1)
+                initializerVars.RemoveAt(initializerVars.Count - 1);
 
             var initializer = SyntaxFactory.EqualsValueClause(
                 SyntaxFactory.InitializerExpression(
