@@ -89,3 +89,4 @@ namespace UdonSharpNetworkingLib.Samples {
 
 # Known Issues
 - Failing to compile if you override the ``OnSerialization`` functions, Please add ``AfterNet`` or ``BeforeNet`` onto the end of the function names to work around this i.e. ``public override void DeserializationBeforeNet() { }``
+- Can't call networked functions in an inherited class as the current one will override the function list

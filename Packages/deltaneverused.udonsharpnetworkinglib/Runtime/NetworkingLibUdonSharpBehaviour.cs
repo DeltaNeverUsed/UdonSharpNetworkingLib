@@ -30,10 +30,10 @@ namespace UdonSharpNetworkingLib {
         /// <param name="methodName">Target function, please use nameof(function)</param>
         /// <param name="target">The target player, only used for target type <see cref="UdonSharpNetworkingLib.NetworkingTargetType.Specific"/> set to <see langword="null" /> otherwise</param>
         /// <param name="args">Function arguments</param>
-        public void NetworkingLib_RPC(string methodName, VRCPlayerApi target = null, params object[] args) {
+        public bool NetworkingLib_RPC(string methodName, VRCPlayerApi target = null, params object[] args) {
             if (!Networking.IsOwner(gameObject)) {
                 Debug.LogError("Can't make RPC call if local player isn't the owner of the object.");
-                return;
+                return false;
             }
             var functions = (string[])GetProgramVariable(FunctionListKey);
 
@@ -51,7 +51,7 @@ namespace UdonSharpNetworkingLib {
             if (functionId == -1) {
                 Debug.LogError($"An invalid function of definition \"{functionDefinition}\" was called but not found.");
                 Debug.LogError($"Available functions were: {string.Join(", ", functions)}");
-                return;
+                return false;
             }
 
             var networkType = ((byte[])GetProgramVariable(NetworkingTypeKey))[functionId];
@@ -60,7 +60,7 @@ namespace UdonSharpNetworkingLib {
             if (isExtended) {
                 if (!Utilities.IsValid(target)) {
                     Debug.LogError($"An invalid player was passed into function definition \"{functionDefinition}\"");
-                    return;
+                    return false;
                 }
 
                 if (target.isLocal) {
@@ -71,12 +71,12 @@ namespace UdonSharpNetworkingLib {
             switch (networkType) {
                 case (byte)NetworkingTargetType.Local:
                     NetworkingLib_FunctionCall((ushort)functionId, args);
-                    return;
+                    return true;
                 case (byte)NetworkingTargetType.Master:
                     if (!Networking.IsMaster)
                         break;
                     NetworkingLib_FunctionCall((ushort)functionId, args);
-                    return;
+                    return true;
             }
 
             var dataLen = isExtended ? 3 : 2;
@@ -97,6 +97,8 @@ namespace UdonSharpNetworkingLib {
             if (networkType == (byte)NetworkingTargetType.All) {
                 NetworkingLib_FunctionCall((ushort)functionId, args);
             }
+
+            return true;
         }
 
         public override void OnDeserialization(DeserializationResult result) {
