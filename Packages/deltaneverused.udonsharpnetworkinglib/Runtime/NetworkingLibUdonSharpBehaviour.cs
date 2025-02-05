@@ -36,6 +36,10 @@ namespace UdonSharpNetworkingLib {
                 return false;
             }
             var functions = (string[])GetProgramVariable(FunctionListKey);
+            if (!Utilities.IsValid(functions)) {
+                Debug.LogError("Function list was null?");
+                return false;
+            }
 
             var paramTypeNames = new string[args.Length * 2];
             for (var index = 0; index < args.Length; index++) {
