@@ -1,3 +1,7 @@
+> [!WARNING]
+> This package likely won't be updated after [VRCSDK 3.8.1](https://creators.vrchat.com/releases/release-3-8-1/#udon-network-events-with-parameters) as it adds the major feature of this package. \
+> I will still be doing bug fixes. \
+
 # UdonSharp Networking Library
 A compiler patch to have networked events with parameters.
 
